@@ -17,7 +17,7 @@ export default function RegisterForm() {
     password: '',
     confirmPassword: '',
     address: '',
-    registrationType: '',
+    registrationType: ''
   });
 
   const registrationTypes = [
@@ -27,7 +27,7 @@ export default function RegisterForm() {
     { value: 'admin', label: 'Super Admin' },
   ];
 
-  const productionRoles = [
+  const operatorTypes = [
     { value: 'flexo_printing', label: 'Flexo Printing Operator' },
     { value: 'bag_making', label: 'Bag Making Operator' },
     { value: 'opsert_printing', label: 'Opsert Printing Operator' },
@@ -35,7 +35,14 @@ export default function RegisterForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      // If changing registration type and it's not production,
+      // reset the operatorType
+      if (name === 'registrationType' && value !== 'production') {
+        return { ...prev, [name]: value, operatorType: '' };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   const handleSubmit = async (e) => {
