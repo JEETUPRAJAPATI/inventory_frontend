@@ -15,6 +15,11 @@ import Reports from './pages/Reports';
 import RoleManagement from './pages/RoleManagement';
 import PrivateRoute from './components/PrivateRoute';
 
+// Production-specific dashboards
+import FlexoDashboard from './pages/production/FlexoDashboard';
+import BagMakingDashboard from './pages/production/BagMakingDashboard';
+import OpsertDashboard from './pages/production/OpsertDashboard';
+
 export default function App() {
   return (
     <Router>
@@ -25,6 +30,8 @@ export default function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/register" element={<RegisterForm />} />
             <Route path="/login" element={<LoginForm />} />
+            
+            {/* Admin Routes */}
             <Route
               path="/admin/*"
               element={
@@ -34,10 +41,6 @@ export default function App() {
                       <Route path="dashboard" element={<Dashboard />} />
                       <Route path="users" element={<UserManagement />} />
                       <Route path="roles" element={<RoleManagement />} />
-                      <Route path="sales" element={<Sales />} />
-                      <Route path="production" element={<Production />} />
-                      <Route path="delivery" element={<Delivery />} />
-                      <Route path="reports" element={<Reports />} />
                       <Route path="settings" element={<Settings />} />
                       <Route path="*" element={<Navigate to="dashboard" replace />} />
                     </Routes>
@@ -45,6 +48,57 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+
+            {/* Sales Routes */}
+            <Route
+              path="/sales/*"
+              element={
+                <PrivateRoute>
+                  <AdminLayout>
+                    <Routes>
+                      <Route path="dashboard" element={<Sales />} />
+                      <Route path="*" element={<Navigate to="dashboard" replace />} />
+                    </Routes>
+                  </AdminLayout>
+                </PrivateRoute>
+              }
+            />
+
+            {/* Delivery Routes */}
+            <Route
+              path="/delivery/*"
+              element={
+                <PrivateRoute>
+                  <AdminLayout>
+                    <Routes>
+                      <Route path="dashboard" element={<Delivery />} />
+                      <Route path="*" element={<Navigate to="dashboard" replace />} />
+                    </Routes>
+                  </AdminLayout>
+                </PrivateRoute>
+              }
+            />
+
+            {/* Production Routes */}
+            <Route
+              path="/production/*"
+              element={
+                <PrivateRoute>
+                  <AdminLayout>
+                    <Routes>
+                      <Route path="dashboard" element={<Production />} />
+                      <Route path="flexo/dashboard" element={<FlexoDashboard />} />
+                      <Route path="bagmaking/dashboard" element={<BagMakingDashboard />} />
+                      <Route path="opsert/dashboard" element={<OpsertDashboard />} />
+                      <Route path="*" element={<Navigate to="dashboard" replace />} />
+                    </Routes>
+                  </AdminLayout>
+                </PrivateRoute>
+              }
+            />
+
+            {/* Catch-all route */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </ColorModeProvider>
       </AuthProvider>

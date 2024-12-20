@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login } from '../services/api';
+import { useState, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { login } from '../services/auth';
 import toast from 'react-hot-toast';
 import FormInput from './common/FormInput';
 import Button from './common/Button';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login: authLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -15,12 +16,12 @@ export default function LoginForm() {
     password: '',
   });
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
     try {
@@ -28,14 +29,17 @@ export default function LoginForm() {
       const response = await login(formData);
       const { user, token } = response;
       
-      authLogin(user, token);
+      await authLogin(user, token);
       toast.success('Login successful!');
+      
+      const from = location.state?.from?.pathname || '/';
+      navigate(from);
     } catch (error) {
       toast.error(error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData, authLogin, navigate, location.state?.from?.pathname]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

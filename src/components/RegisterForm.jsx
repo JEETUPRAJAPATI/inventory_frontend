@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../services/api';
+import { register } from '../services/auth';
 import toast from 'react-hot-toast';
 import FormInput from './common/FormInput';
 import FormSelect from './common/FormSelect';
@@ -153,7 +153,17 @@ export default function RegisterForm() {
               options={registrationTypes}
             />
 
-
+            {formData.registrationType === 'production' && (
+              <FormSelect
+                label="Operator Type"
+                id="operatorType"
+                name="operatorType"
+                required
+                value={formData.operatorType}
+                onChange={handleChange}
+                options={operatorTypes}
+              />
+            )}
 
             <Button
               type="submit"
