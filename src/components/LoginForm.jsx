@@ -4,9 +4,11 @@ import { login } from '../services/api';
 import toast from 'react-hot-toast';
 import FormInput from './common/FormInput';
 import Button from './common/Button';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -24,16 +26,9 @@ export default function LoginForm() {
     try {
       setLoading(true);
       const response = await login(formData);
-      const { role } = response;
+      const { user, token } = response;
       
-      const dashboardRoutes = {
-        'Sales Manager': '/sales/dashboard',
-        'Production Manager': '/production/dashboard',
-        'Delivery Manager': '/delivery/dashboard',
-        'Super Admin': '/admin/dashboard',
-      };
-      
-      navigate(dashboardRoutes[role] || '/');
+      authLogin(user, token);
       toast.success('Login successful!');
     } catch (error) {
       toast.error(error.message || 'Login failed');
