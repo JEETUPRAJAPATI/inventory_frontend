@@ -1,45 +1,46 @@
-import { useState, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { login } from '../services/auth';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { login } from '../services/api';
 import toast from 'react-hot-toast';
 import FormInput from './common/FormInput';
 import Button from './common/Button';
-import { useAuth } from '../hooks/useAuth';
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login: authLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
-  const handleChange = useCallback((e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
+  };
 
-  const handleSubmit = useCallback(async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
       setLoading(true);
       const response = await login(formData);
-      const { user, token } = response;
+      const { role } = response;
       
-      await authLogin(user, token);
+      const dashboardRoutes = {
+        'Sales Manager': '/sales/dashboard',
+        'Production Manager': '/production/dashboard',
+        'Delivery Manager': '/delivery/dashboard',
+        'Super Admin': '/admin/dashboard',
+      };
+      
+      navigate(dashboardRoutes[role] || '/');
       toast.success('Login successful!');
-      
-      const from = location.state?.from?.pathname || '/';
-      navigate(from);
     } catch (error) {
       toast.error(error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
-  }, [formData, authLogin, navigate, location.state?.from?.pathname]);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

@@ -8,24 +8,35 @@ import {
   Box,
   useTheme,
   useMediaQuery,
-  Divider,
-  Typography
 } from '@mui/material';
-import { Logout } from '@mui/icons-material';
+import {
+  Dashboard,
+  People,
+  Settings,
+  Assessment,
+  ShoppingCart,
+  Factory,
+  LocalShipping,
+} from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { getMenuItems } from './SidebarConfig';
 
 const DRAWER_WIDTH = 240;
+
+const menuItems = [
+  { text: 'Dashboard', icon: <Dashboard />, path: '/admin/dashboard' },
+  { text: 'User Management', icon: <People />, path: '/admin/users' },
+  { text: 'Sales', icon: <ShoppingCart />, path: '/admin/sales' },
+  { text: 'Production', icon: <Factory />, path: '/admin/production' },
+  { text: 'Delivery', icon: <LocalShipping />, path: '/admin/delivery' },
+  { text: 'Reports', icon: <Assessment />, path: '/admin/reports' },
+  { text: 'Settings', icon: <Settings />, path: '/admin/settings' },
+];
 
 export default function Sidebar({ open, onClose }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
-  const menuItems = getMenuItems(user?.registrationType, user?.operatorType);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -33,17 +44,7 @@ export default function Sidebar({ open, onClose }) {
   };
 
   const drawer = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ p: 2 }}>
-        <Typography variant="h6" noWrap component="div">
-          {user?.registrationType?.toUpperCase()}
-          {user?.operatorType && ` - ${user.operatorType.replace('_', ' ').toUpperCase()}`}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {user?.email}
-        </Typography>
-      </Box>
-      <Divider />
+    <Box>
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
@@ -51,23 +52,11 @@ export default function Sidebar({ open, onClose }) {
               selected={location.pathname === item.path}
               onClick={() => handleNavigation(item.path)}
             >
-              <ListItemIcon>
-                <item.icon />
-              </ListItemIcon>
+              <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
         ))}
-      </List>
-      <Box sx={{ flexGrow: 1 }} />
-      <Divider />
-      <List>
-        <ListItem disablePadding>
-          <ListItemButton onClick={logout}>
-            <ListItemIcon><Logout /></ListItemIcon>
-            <ListItemText primary="Logout" />
-          </ListItemButton>
-        </ListItem>
       </List>
     </Box>
   );
