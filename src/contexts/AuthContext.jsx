@@ -1,124 +1,44 @@
-import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getRoleBasedRoute } from '../utils/roleUtils';
+import authService from '../services/authService';
 
 export const AuthContext = createContext(null);
 
-const STORAGE_KEYS = {
-  TOKEN: 'authToken',
-  USER: 'user'
-};
-
 export function AuthProvider({ children }) {
-  const [state, setState] = useState({
-    user: null,
-    token: null,
-    loading: true,
-    error: null
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = () => {
-      try {
-        const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-        const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-        
-        if (mounted) {
-          if (storedToken && storedUser) {
-            const user = JSON.parse(storedUser);
-            setState(prev => ({
-              ...prev,
-              token: storedToken,
-              user,
-              loading: false
-            }));
-            // Redirect to appropriate dashboard if user is already logged in
-            navigate(getRoleBasedRoute(user.registrationType, user.operatorType));
-          } else {
-            setState(prev => ({ ...prev, loading: false }));
-          }
-        }
-      } catch (error) {
-        console.error('Error restoring auth state:', error);
-        localStorage.removeItem(STORAGE_KEYS.TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USER);
-        if (mounted) {
-          setState(prev => ({
-            ...prev,
-            loading: false,
-            error: 'Failed to restore authentication state'
-          }));
-        }
+    const initAuth = () => {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
       }
+      setLoading(false);
     };
 
-    initializeAuth();
+    initAuth();
+  }, []);
 
-    return () => {
-      mounted = false;
-    };
-  }, [navigate]);
+  const login = async (credentials) => {
+    const { user, token } = await authService.login(credentials);
+    setUser(user);
+    return { user, token };
+  };
 
-  const login = useCallback(async (userData, authToken) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.TOKEN, authToken);
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
-      
-      setState(prev => ({
-        ...prev,
-        user: userData,
-        token: authToken,
-        error: null
-      }));
-
-      // Get the correct route based on user role and operator type
-      const redirectPath = getRoleBasedRoute(
-        userData.registrationType,
-        userData.operatorType
-      );
-      navigate(redirectPath);
-    } catch (error) {
-      console.error('Error during login:', error);
-      setState(prev => ({
-        ...prev,
-        error: 'Failed to complete login process'
-      }));
-      throw error;
-    }
-  }, [navigate]);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-    
-    setState({
-      user: null,
-      token: null,
-      loading: false,
-      error: null
-    });
-    
+  const logout = () => {
+    authService.logout();
+    setUser(null);
     navigate('/login');
-  }, [navigate]);
+  };
 
-  const value = useMemo(() => ({
-    user: state.user,
-    token: state.token,
-    loading: state.loading,
-    error: state.error,
-    login,
-    logout
-  }), [state, login, logout]);
-
-  if (state.loading) {
+  if (loading) {
     return null;
   }
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

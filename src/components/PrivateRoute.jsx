@@ -1,22 +1,15 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getRolePermissions } from '../utils/roleUtils';
 
-export default function PrivateRoute({ children, requiredPermissions = [] }) {
-  const { user, token } = useAuth();
+export default function PrivateRoute({ children, requiredRole }) {
+  const { user, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const userPermissions = getRolePermissions(user.registrationType, user.operatorType);
-  const hasAccess = 
-    userPermissions.includes('all') || 
-    requiredPermissions.length === 0 ||
-    requiredPermissions.some(permission => userPermissions.includes(permission));
-
-  if (!hasAccess) {
+  if (requiredRole && user.registrationType !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
   }
 

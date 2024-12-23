@@ -10,55 +10,48 @@ import {
   IconButton,
   Typography,
   Button,
-  Chip,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 
-const mockOrders = [
-  { id: 1, customer: 'John Doe', amount: '$1,200', status: 'Pending', date: '2024-02-10' },
-  { id: 2, customer: 'Jane Smith', amount: '$850', status: 'Completed', date: '2024-02-09' },
+const mockCustomers = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+1234567890', orders: 5 },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+0987654321', orders: 3 },
 ];
 
-export default function OrderList() {
+export default function CustomerList() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-  const handleDelete = (order) => {
-    setSelectedOrder(order);
+  const handleDelete = (customer) => {
+    setSelectedCustomer(customer);
     setDeleteDialogOpen(true);
   };
 
   return (
     <Card>
       <div className="flex justify-between items-center p-4">
-        <Typography variant="h6">Orders</Typography>
-        <Button variant="contained" color="primary">Add Order</Button>
+        <Typography variant="h6">Customers</Typography>
+        <Button variant="contained" color="primary">Add Customer</Button>
       </div>
       <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Customer</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Date</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Phone</TableCell>
+              <TableCell>Total Orders</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {mockOrders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell>{order.customer}</TableCell>
-                <TableCell>{order.amount}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={order.status} 
-                    color={order.status === 'Completed' ? 'success' : 'warning'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>{order.date}</TableCell>
+            {mockCustomers.map((customer) => (
+              <TableRow key={customer.id}>
+                <TableCell>{customer.name}</TableCell>
+                <TableCell>{customer.email}</TableCell>
+                <TableCell>{customer.phone}</TableCell>
+                <TableCell>{customer.orders}</TableCell>
                 <TableCell>
                   <IconButton size="small" color="primary">
                     <Edit />
@@ -66,7 +59,7 @@ export default function OrderList() {
                   <IconButton 
                     size="small" 
                     color="error"
-                    onClick={() => handleDelete(order)}
+                    onClick={() => handleDelete(customer)}
                   >
                     <Delete />
                   </IconButton>
@@ -80,8 +73,8 @@ export default function OrderList() {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={() => setDeleteDialogOpen(false)}
-        title="Delete Order"
-        content="Are you sure you want to delete this order? This action cannot be undone."
+        title="Delete Customer"
+        content="Are you sure you want to delete this customer? This action cannot be undone."
       />
     </Card>
   );

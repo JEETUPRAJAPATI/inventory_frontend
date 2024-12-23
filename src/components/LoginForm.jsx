@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import FormInput from './common/FormInput';
 import Button from './common/Button';
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -20,21 +21,26 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     
     try {
-      setLoading(true);
-      const response = await login(formData);
-      const { role } = response;
+      const { user } = await login(formData);
       
-      const dashboardRoutes = {
-        'Sales Manager': '/sales/dashboard',
-        'Production Manager': '/production/dashboard',
-        'Delivery Manager': '/delivery/dashboard',
-        'Super Admin': '/admin/dashboard',
-      };
+      // Determine redirect path based on user role
+      let redirectPath = '/admin/dashboard';
       
-      navigate(dashboardRoutes[role] || '/');
+      if (user.registrationType === 'production') {
+        redirectPath = user.operatorType 
+          ? `/production/${user.operatorType}/dashboard`
+          : '/production/dashboard';
+      } else if (user.registrationType === 'sales') {
+        redirectPath = '/sales/dashboard';
+      } else if (user.registrationType === 'delivery') {
+        redirectPath = '/delivery/dashboard';
+      }
+      
       toast.success('Login successful!');
+      navigate(redirectPath);
     } catch (error) {
       toast.error(error.message || 'Login failed');
     } finally {
