@@ -6,6 +6,7 @@ import RegisterForm from './components/RegisterForm';
 import LoginForm from './components/LoginForm';
 import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
+import LandingPage from './pages/LandingPage';
 import Settings from './pages/Settings';
 import Sales from './pages/Sales';
 import OrdersPage from './pages/sales/OrdersPage';
@@ -26,7 +27,7 @@ export default function App() {
     <ColorModeProvider>
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
