@@ -1,19 +1,25 @@
-import axios from 'axios';
+import api from './api';
 import { storage, StorageKeys } from '../utils/storage';
-
-const API_URL = 'https://inventory-zmsp.onrender.com/api';
 
 const authService = {
   login: async (credentials) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, credentials);
+      const response = await api.post('/auth/login', credentials);
       const { token, user } = response.data;
       
-      // Store auth data
       storage.set(StorageKeys.TOKEN, token);
       storage.set(StorageKeys.USER, JSON.stringify(user));
       
       return { token, user };
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  register: async (userData) => {
+    try {
+      const response = await api.post('/auth/register', userData);
+      return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
     }

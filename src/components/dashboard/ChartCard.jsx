@@ -47,7 +47,7 @@ export default function ChartCard() {
                 dataKey="revenue"
                 stroke="#8884d8"
                 activeDot={{ r: 8 }}
-                name="Revenue ($)"
+                name="Revenue (₹)"
               />
               <Line
                 yAxisId="right"

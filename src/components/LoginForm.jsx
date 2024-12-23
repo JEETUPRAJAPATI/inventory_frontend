@@ -19,26 +19,41 @@ export default function LoginForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const getRedirectPath = (user) => {
+    if (user.registrationType === 'production') {
+      // Map operator types to their corresponding routes
+      const operatorRoutes = {
+        'flexo-printing': '/production/flexo/dashboard',
+        'bag-making': '/production/bagmaking/dashboard',
+        'opsert-printing': '/production/opsert/dashboard'
+      };
+      
+      // If there's an operator type, use its specific route
+      if (user.operatorType && operatorRoutes[user.operatorType]) {
+        return operatorRoutes[user.operatorType];
+      }
+      
+      // Default production route if no specific operator type
+      return '/production/dashboard';
+    }
+    
+    // Routes for other user types
+    const routes = {
+      sales: '/sales/dashboard',
+      delivery: '/delivery/dashboard',
+      admin: '/admin/dashboard'
+    };
+    
+    return routes[user.registrationType] || '/login';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
       const { user } = await login(formData);
-      
-      // Determine redirect path based on user role
-      let redirectPath = '/admin/dashboard';
-      
-      if (user.registrationType === 'production') {
-        redirectPath = user.operatorType 
-          ? `/production/${user.operatorType}/dashboard`
-          : '/production/dashboard';
-      } else if (user.registrationType === 'sales') {
-        redirectPath = '/sales/dashboard';
-      } else if (user.registrationType === 'delivery') {
-        redirectPath = '/delivery/dashboard';
-      }
-      
+      const redirectPath = getRedirectPath(user);
       toast.success('Login successful!');
       navigate(redirectPath);
     } catch (error) {

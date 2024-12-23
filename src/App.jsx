@@ -8,11 +8,15 @@ import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
 import Settings from './pages/Settings';
 import Sales from './pages/Sales';
+import OrdersPage from './pages/sales/OrdersPage';
 import Production from './pages/Production';
-import Delivery from './pages/Delivery';
 import FlexoDashboard from './pages/production/FlexoDashboard';
 import BagMakingDashboard from './pages/production/BagMakingDashboard';
 import OpsertDashboard from './pages/production/OpsertDashboard';
+import FlexoReportsPage from './pages/production/reports/FlexoReportsPage';
+import OpsertReportsPage from './pages/production/reports/OpsertReportsPage';
+import BagMakingReportsPage from './pages/production/reports/BagMakingReportsPage';
+import Delivery from './pages/Delivery';
 import Reports from './pages/Reports';
 import PrivateRoute from './components/PrivateRoute';
 import Unauthorized from './pages/Unauthorized';
@@ -27,20 +31,20 @@ export default function App() {
         <Route path="/login" element={<LoginForm />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Admin Routes */}
+        {/* Production Routes */}
         <Route
-          path="/admin/*"
+          path="/production/*"
           element={
-            <PrivateRoute requiredRole="admin">
+            <PrivateRoute requiredRole="production">
               <AdminLayout>
                 <Routes>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="users" element={<UserManagement />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="sales" element={<Sales />} />
-                  <Route path="production" element={<Production />} />
-                  <Route path="delivery" element={<Delivery />} />
-                  <Route path="reports" element={<Reports />} />
+                  <Route path="dashboard" element={<Production />} />
+                  <Route path="flexo/dashboard" element={<FlexoDashboard />} />
+                  <Route path="flexo/reports" element={<FlexoReportsPage />} />
+                  <Route path="bagmaking/dashboard" element={<BagMakingDashboard />} />
+                  <Route path="bagmaking/reports" element={<BagMakingReportsPage />} />
+                  <Route path="opsert/dashboard" element={<OpsertDashboard />} />
+                  <Route path="opsert/reports" element={<OpsertReportsPage />} />
                 </Routes>
               </AdminLayout>
             </PrivateRoute>
@@ -55,23 +59,7 @@ export default function App() {
               <AdminLayout>
                 <Routes>
                   <Route path="dashboard" element={<Sales />} />
-                  <Route path="reports" element={<Reports />} />
-                </Routes>
-              </AdminLayout>
-            </PrivateRoute>
-          }
-        />
-
-        {/* Production Routes */}
-        <Route
-          path="/production/*"
-          element={
-            <PrivateRoute requiredRole="production">
-              <AdminLayout>
-                <Routes>
-                  <Route path="flexo/*" element={<FlexoDashboard />} />
-                  <Route path="bagmaking/*" element={<BagMakingDashboard />} />
-                  <Route path="opsert/*" element={<OpsertDashboard />} />
+                  <Route path="orders" element={<OrdersPage />} />
                   <Route path="reports" element={<Reports />} />
                 </Routes>
               </AdminLayout>
@@ -87,6 +75,23 @@ export default function App() {
               <AdminLayout>
                 <Routes>
                   <Route path="dashboard" element={<Delivery />} />
+                  <Route path="reports" element={<Reports />} />
+                </Routes>
+              </AdminLayout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin/*"
+          element={
+            <PrivateRoute requiredRole="admin">
+              <AdminLayout>
+                <Routes>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="users" element={<UserManagement />} />
+                  <Route path="settings" element={<Settings />} />
                   <Route path="reports" element={<Reports />} />
                 </Routes>
               </AdminLayout>

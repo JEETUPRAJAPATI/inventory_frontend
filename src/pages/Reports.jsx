@@ -20,20 +20,25 @@ import toast from 'react-hot-toast';
 const mockReports = [
   {
     id: 1,
-    title: 'Monthly Sales Report',
-    type: 'sales',
-    dateRange: 'Jan 2024 - Feb 2024',
+    title: 'Monthly Sales Report - January',
+    dateRange: 'Jan 2024',
     status: 'completed',
-    createdAt: '2024-02-10',
+    createdAt: '2024-01-31',
   },
   {
     id: 2,
-    title: 'Production Efficiency Report',
-    type: 'production',
+    title: 'Monthly Sales Report - February',
     dateRange: 'Feb 2024',
     status: 'draft',
-    createdAt: '2024-02-09',
+    createdAt: '2024-02-15',
   },
+  {
+    id: 3,
+    title: 'Q1 Sales Analysis',
+    dateRange: 'Jan 2024 - Mar 2024',
+    status: 'in_progress',
+    createdAt: '2024-02-20',
+  }
 ];
 
 export default function Reports() {
@@ -58,10 +63,7 @@ export default function Reports() {
   };
 
   const handleFormSubmit = (formData) => {
-    const message = selectedReport
-      ? 'Report updated successfully'
-      : 'Report created successfully';
-    toast.success(message);
+    toast.success(selectedReport ? 'Report updated successfully' : 'Report created successfully');
     setFormOpen(false);
   };
 
@@ -74,7 +76,7 @@ export default function Reports() {
     const colors = {
       completed: 'success',
       draft: 'warning',
-      processing: 'info',
+      in_progress: 'info',
     };
     return colors[status] || 'default';
   };
@@ -98,7 +100,6 @@ export default function Reports() {
             <TableHead>
               <TableRow>
                 <TableCell>Title</TableCell>
-                <TableCell>Type</TableCell>
                 <TableCell>Date Range</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Created At</TableCell>
@@ -109,9 +110,6 @@ export default function Reports() {
               {mockReports.map((report) => (
                 <TableRow key={report.id}>
                   <TableCell>{report.title}</TableCell>
-                  <TableCell>
-                    {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
-                  </TableCell>
                   <TableCell>{report.dateRange}</TableCell>
                   <TableCell>
                     <Chip

@@ -13,7 +13,7 @@ import FormTextarea from '../common/FormTextarea';
 
 const initialFormData = {
   title: '',
-  type: '',
+  type: 'sales',
   description: '',
   dateRange: '',
   status: 'draft',
@@ -42,9 +42,6 @@ export default function ReportForm({ open, onClose, onSubmit, report = null }) {
 
   const reportTypes = [
     { value: 'sales', label: 'Sales Report' },
-    { value: 'production', label: 'Production Report' },
-    { value: 'delivery', label: 'Delivery Report' },
-    { value: 'inventory', label: 'Inventory Report' },
   ];
 
   return (
@@ -72,6 +69,7 @@ export default function ReportForm({ open, onClose, onSubmit, report = null }) {
                 onChange={handleChange}
                 options={reportTypes}
                 required
+                disabled
               />
             </Grid>
             <Grid item xs={12}>

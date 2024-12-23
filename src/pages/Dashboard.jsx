@@ -42,7 +42,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <SummaryCard
             title="Total Sales"
-            value="$15,350"
+            value="₹15,350"
             increase="+12%"
             color="primary"
           />

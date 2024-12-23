@@ -1,6 +1,6 @@
 import { Grid } from '@mui/material';
 import SummaryCard from '../components/dashboard/SummaryCard';
-import OrderList from '../components/sales/OrderList';
+import RecentOrders from '../components/sales/dashboard/RecentOrders';
 
 export default function Sales() {
   return (
@@ -8,7 +8,7 @@ export default function Sales() {
       <Grid item xs={12} md={6} lg={3}>
         <SummaryCard
           title="Total Sales"
-          value="$45,650"
+          value="₹45,650"
           increase="+15%"
           color="primary"
         />
@@ -22,7 +22,7 @@ export default function Sales() {
         />
       </Grid>
       <Grid item xs={12}>
-        <OrderList />
+        <RecentOrders />
       </Grid>
     </Grid>
   );
