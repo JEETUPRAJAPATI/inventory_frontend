@@ -18,6 +18,10 @@ import FlexoReportsPage from './pages/production/reports/FlexoReportsPage';
 import OpsertReportsPage from './pages/production/reports/OpsertReportsPage';
 import BagMakingReportsPage from './pages/production/reports/BagMakingReportsPage';
 import Delivery from './pages/Delivery';
+import DeliveryList from './components/delivery/DeliveryList';
+import InvoiceList from './components/delivery/InvoiceList';
+import PackagingList from './components/delivery/PackagingList';
+import DeliveryLogs from './components/delivery/DeliveryLogs';
 import Reports from './pages/Reports';
 import PrivateRoute from './components/PrivateRoute';
 import Unauthorized from './pages/Unauthorized';
@@ -27,7 +31,7 @@ export default function App() {
     <ColorModeProvider>
       <Toaster position="top-right" />
       <Routes>
-      <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
@@ -76,6 +80,10 @@ export default function App() {
               <AdminLayout>
                 <Routes>
                   <Route path="dashboard" element={<Delivery />} />
+                  <Route path="deliveries" element={<DeliveryList />} />
+                  <Route path="invoices" element={<InvoiceList />} />
+                  <Route path="packaging" element={<PackagingList />} />
+                  <Route path="logs" element={<DeliveryLogs />} />
                   <Route path="reports" element={<Reports />} />
                 </Routes>
               </AdminLayout>

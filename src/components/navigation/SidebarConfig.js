@@ -10,6 +10,14 @@ export const menuConfigs = {
     { title: 'Orders', path: '/sales/orders', icon: 'ShoppingCart' },
     { title: 'Reports', path: '/sales/reports', icon: 'Assessment' }
   ],
+  delivery: [
+    { title: 'Dashboard', path: '/delivery/dashboard', icon: 'Dashboard' },
+    { title: 'Deliveries', path: '/delivery/deliveries', icon: 'LocalShipping' },
+    { title: 'Invoices', path: '/delivery/invoices', icon: 'Receipt' },
+    { title: 'Packaging', path: '/delivery/packaging', icon: 'Inventory' },
+    { title: 'Delivery Logs', path: '/delivery/logs', icon: 'History' },
+    { title: 'Reports', path: '/delivery/reports', icon: 'Assessment' }
+  ],
   flexo_printing: [
     { title: 'Dashboard', path: '/production/flexo/dashboard', icon: 'Dashboard' },
     { title: 'Reports', path: '/production/flexo/reports', icon: 'Assessment' }
