@@ -27,7 +27,7 @@ export default function OrderList() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedQrOrder, setSelectedQrOrder] = useState(null);
-  
+
   const { orders, isLoading, createOrder, updateOrder, deleteOrder } = useOrders();
 
   const handleAdd = () => {
@@ -106,7 +106,7 @@ export default function OrderList() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders.map((order) => (
+            {Array.isArray(orders) && orders.map((order)  => (
                 <TableRow key={order.id}>
                   <TableCell>{order.customerName}</TableCell>
                   <TableCell>{order.jobName}</TableCell>

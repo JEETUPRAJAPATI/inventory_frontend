@@ -98,13 +98,7 @@ export default function LandingPage() {
                 >
                   Login
                 </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => navigate('/register')}
-                >
-                  Sign Up
-                </Button>
+
                 <IconButton color="inherit" onClick={toggleColorMode}>
                   {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
                 </IconButton>

@@ -115,7 +115,7 @@ export default function OpsertDashboard() {
           <ProductionMetrics metrics={currentMetrics.production} />
         </Card>
       </Grid>
-      
+
       <Grid item xs={12} md={6}>
         <MachineStatus status={currentMetrics.machine} />
       </Grid>
@@ -139,6 +139,8 @@ export default function OpsertDashboard() {
                 <TableRow>
                   <TableCell>Agent Name</TableCell>
                   <TableCell>Bag Type</TableCell>
+                  <TableCell>Job Name</TableCell>
+
                   <TableCell>Print Type</TableCell>
                   <TableCell>Quantity</TableCell>
                   <TableCell>Status</TableCell>
@@ -150,6 +152,7 @@ export default function OpsertDashboard() {
                   <TableRow key={record.id}>
                     <TableCell>{record.agent_name}</TableCell>
                     <TableCell>{record.bag_type}</TableCell>
+                    <TableCell>{record.jobName}</TableCell>
                     <TableCell>{record.print_type}</TableCell>
                     <TableCell>{record.quantity}</TableCell>
                     <TableCell>

@@ -38,13 +38,13 @@ export default function BagMakingForm({ open, onClose, onSubmit, record = null }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Clear job_name when switching to D-Cut Loop Handle
     if (name === 'bag_type' && value === 'd-cut-loop-handle') {
-      setFormData(prev => ({ 
-        ...prev, 
+      setFormData(prev => ({
+        ...prev,
         [name]: value,
-        job_name: '' 
+        job_name: ''
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -74,12 +74,15 @@ export default function BagMakingForm({ open, onClose, onSubmit, record = null }
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
               <FormInput
-                label="Role Size"
-                name="role_size"
-                value={formData.role_size}
-                onChange={handleChange}
-                required
-              />
+                            label="Order Id"
+                             type='text'
+                            name="order_id"
+                            value={formData.order_id}
+                            onChange={handleChange}
+                            required
+                          />
+
+
             </Grid>
             <Grid item xs={12} md={6}>
               <FormSelect
@@ -170,6 +173,15 @@ export default function BagMakingForm({ open, onClose, onSubmit, record = null }
                 value={formData.status}
                 onChange={handleChange}
                 options={statusOptions}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+            <FormInput
+                label="Role Size"
+                name="role_size"
+                value={formData.role_size}
+                onChange={handleChange}
                 required
               />
             </Grid>

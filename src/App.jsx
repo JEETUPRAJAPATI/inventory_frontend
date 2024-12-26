@@ -22,6 +22,9 @@ import DeliveryList from './components/delivery/DeliveryList';
 import InvoiceList from './components/delivery/InvoiceList';
 import PackagingList from './components/delivery/PackagingList';
 import DeliveryLogs from './components/delivery/DeliveryLogs';
+import AdminSalesPage from './pages/admin/sales/AdminSalesPage';
+import AdminProductionPage from './pages/admin/production/AdminProductionPage';
+import AdminDeliveryPage from './pages/admin/delivery/AdminDeliveryPage';
 import Reports from './pages/Reports';
 import PrivateRoute from './components/PrivateRoute';
 import Unauthorized from './pages/Unauthorized';
@@ -102,6 +105,18 @@ export default function App() {
                   <Route path="users" element={<UserManagement />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="reports" element={<Reports />} />
+
+                  {/* Sales Routes */}
+                  <Route path="sales/*" element={<AdminSalesPage />} />
+
+                  {/* Production Routes */}
+                  <Route path="production/w-cut/flexo" element={<AdminProductionPage />} />
+                  <Route path="production/w-cut/bag-making" element={<AdminProductionPage />} />
+                  <Route path="production/d-cut/opsert" element={<AdminProductionPage />} />
+                  <Route path="production/d-cut/bag-making" element={<AdminProductionPage />} />
+
+                  {/* Delivery Routes */}
+                  <Route path="delivery/*" element={<AdminDeliveryPage />} />
                 </Routes>
               </AdminLayout>
             </PrivateRoute>

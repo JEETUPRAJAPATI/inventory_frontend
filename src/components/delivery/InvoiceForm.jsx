@@ -38,18 +38,18 @@ export default function InvoiceForm({ open, onClose, onSubmit }) {
 
   const calculateTotals = () => {
     if (!selectedOrder || !formData.unitPrice) return { subtotal: 0, gst: 0, total: 0 };
-    
+
     const subtotal = selectedOrder.quantity * parseFloat(formData.unitPrice);
     const gst = subtotal * 0.18; // 18% GST
     const total = subtotal + gst;
-    
+
     return { subtotal, gst, total };
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const { subtotal, gst, total } = calculateTotals();
-    
+
     onSubmit({
       ...formData,
       ...selectedOrder,
@@ -58,11 +58,12 @@ export default function InvoiceForm({ open, onClose, onSubmit }) {
       total,
     });
   };
-
-  const orderOptions = orders.map(order => ({
-    value: order.id,
-    label: `${order.jobName} - ${order.customerName}`
-  }));
+  const orderOptions = Array.isArray(orders)
+  ? orders.map(order => ({
+      value: order.id,
+      label: `${order.jobName} - ${order.customerName}`
+    }))
+  : [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -220,9 +221,9 @@ export default function InvoiceForm({ open, onClose, onSubmit }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button 
-            type="submit" 
-            variant="contained" 
+          <Button
+            type="submit"
+            variant="contained"
             color="primary"
             disabled={!selectedOrder || !formData.unitPrice}
           >

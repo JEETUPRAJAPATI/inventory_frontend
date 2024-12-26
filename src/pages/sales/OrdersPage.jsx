@@ -7,12 +7,18 @@ export default function OrdersPage() {
   const { orders } = useOrders();
 
   const getTotalOrders = () => orders.length;
-  
-  const getPendingOrders = () => 
-    orders.filter(order => order.status === 'pending').length;
-  
-  const getCompletedOrders = () => 
-    orders.filter(order => order.status === 'completed').length;
+
+  // const getPendingOrders = () =>
+  //   orders.filter(order => order.status === 'pending').length;
+
+  // const getCompletedOrders = () =>
+  //   orders.filter(order => order.status === 'completed').length;
+
+  const getPendingOrders = () =>
+    (Array.isArray(orders) ? orders : []).filter(order => order.status === 'pending').length;
+
+  const getCompletedOrders = () =>
+    (Array.isArray(orders) ? orders : []).filter(order => order.status === 'completed').length;
 
   return (
     <Grid container spacing={3}>

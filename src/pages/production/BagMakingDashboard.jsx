@@ -115,7 +115,7 @@ export default function BagMakingDashboard() {
           <ProductionMetrics metrics={currentMetrics.production} />
         </Card>
       </Grid>
-      
+
       <Grid item xs={12} md={6}>
         <MachineStatus status={currentMetrics.machine} />
       </Grid>
@@ -139,6 +139,7 @@ export default function BagMakingDashboard() {
                 <TableRow>
                   <TableCell>Job Name</TableCell>
                   <TableCell>Bag Type</TableCell>
+                  <TableCell>Order Id</TableCell>
                   <TableCell>Size</TableCell>
                   <TableCell>Quantity</TableCell>
                   <TableCell>Status</TableCell>
@@ -150,6 +151,7 @@ export default function BagMakingDashboard() {
                   <TableRow key={record.id}>
                     <TableCell>{record.job_name}</TableCell>
                     <TableCell>{record.bag_type}</TableCell>
+                    <TableCell>{record.orderId}</TableCell>
                     <TableCell>{record.bag_size}</TableCell>
                     <TableCell>{record.quantity}</TableCell>
                     <TableCell>

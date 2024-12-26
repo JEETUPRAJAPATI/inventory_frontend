@@ -65,14 +65,15 @@ export default function FlexoForm({ open, onClose, onSubmit, record = null }) {
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
-              <FormSelect
-                label="Print Color"
-                name="print_color"
-                value={formData.print_color}
+            <FormInput
+                label="Order Id"
+                 type='text'
+                name="order_id"
+                value={formData.order_id}
                 onChange={handleChange}
-                options={colorOptions}
                 required
               />
+
             </Grid>
             <Grid item xs={12} md={6}>
               <FormInput
@@ -192,7 +193,17 @@ export default function FlexoForm({ open, onClose, onSubmit, record = null }) {
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormSelect
+            <FormSelect
+                label="Print Color"
+                name="print_color"
+                value={formData.print_color}
+                onChange={handleChange}
+                options={colorOptions}
+                required
+              />
+              </Grid>
+ <Grid item xs={12} md={6}>
+ <FormSelect
                 label="Status"
                 name="status"
                 value={formData.status}
@@ -200,7 +211,8 @@ export default function FlexoForm({ open, onClose, onSubmit, record = null }) {
                 options={statusOptions}
                 required
               />
-            </Grid>
+ </Grid>
+
           </Grid>
         </DialogContent>
         <DialogActions>

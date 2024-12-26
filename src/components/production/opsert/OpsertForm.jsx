@@ -62,13 +62,15 @@ export default function OpsertForm({ open, onClose, onSubmit, record = null }) {
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
               <FormInput
-                label="Agent Name"
-                name="agent_name"
-                value={formData.agent_name}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
+                            label="Order Id"
+                             type='text'
+                            name="order_id"
+                            value={formData.order_id}
+                            onChange={handleChange}
+                            required
+                          />
+</Grid>
+
             <Grid item xs={12} md={6}>
               <FormSelect
                 label="Bag Type"
@@ -136,6 +138,15 @@ export default function OpsertForm({ open, onClose, onSubmit, record = null }) {
                 value={formData.print_type}
                 onChange={handleChange}
                 options={printTypes}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+            <FormInput
+                label="Agent Name"
+                name="agent_name"
+                value={formData.agent_name}
+                onChange={handleChange}
                 required
               />
             </Grid>
