@@ -1,65 +1,50 @@
-import { useState, useEffect, useCallback } from 'react';
-import orderService from '../services/orderService';
+import { useState } from 'react';
+import { mockOrders } from '../data/mockOrders';
+import toast from 'react-hot-toast';
 
 export function useOrders() {
-  const [orders, setOrders] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchOrders = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const data = await orderService.getOrders();
-      setOrders(data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      setOrders([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  const [orders, setOrders] = useState(mockOrders);
 
   const createOrder = async (orderData) => {
     try {
-      const newOrder = await orderService.createOrder(orderData);
-      await fetchOrders();
+      const newOrder = {
+        ...orderData,
+        id: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
+        createdAt: new Date().toISOString().split('T')[0],
+        status: 'pending'
+      };
+      setOrders([...orders, newOrder]);
       return newOrder;
-    } catch (err) {
-      setError(err.message);
-      throw err;
+    } catch (error) {
+      throw new Error('Failed to create order');
     }
   };
 
   const updateOrder = async (orderId, orderData) => {
     try {
-      const updatedOrder = await orderService.updateOrder(orderId, orderData);
-      await fetchOrders();
-      return updatedOrder;
-    } catch (err) {
-      setError(err.message);
-      throw err;
+      const updatedOrders = orders.map(order => 
+        order.id === orderId ? { ...order, ...orderData } : order
+      );
+      setOrders(updatedOrders);
+      return updatedOrders.find(order => order.id === orderId);
+    } catch (error) {
+      throw new Error('Failed to update order');
     }
   };
 
   const deleteOrder = async (orderId) => {
     try {
-      await orderService.deleteOrder(orderId);
-      await fetchOrders();
-    } catch (err) {
-      setError(err.message);
-      throw err;
+      setOrders(orders.filter(order => order.id !== orderId));
+      toast.success('Order deleted successfully');
+    } catch (error) {
+      throw new Error('Failed to delete order');
     }
   };
 
   return {
     orders,
-    isLoading,
-    error,
+    isLoading: false,
+    error: null,
     createOrder,
     updateOrder,
     deleteOrder,

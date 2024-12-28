@@ -9,10 +9,24 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { groupRecordsByDate } from '../../../../utils/reportUtils';
 
 export default function ReportCharts({ records }) {
-  const chartData = groupRecordsByDate(records);
+  // Transform records into chart data
+  const chartData = records.reduce((acc, record) => {
+    const date = record.completion_date || new Date().toISOString().split('T')[0];
+    if (!acc[date]) {
+      acc[date] = { date, total: 0, completed: 0 };
+    }
+    acc[date].total++;
+    if (record.status === 'completed') {
+      acc[date].completed++;
+    }
+    return acc;
+  }, {});
+
+  const data = Object.values(chartData).sort((a, b) => 
+    new Date(a.date) - new Date(b.date)
+  );
 
   return (
     <Card>
@@ -28,7 +42,7 @@ export default function ReportCharts({ records }) {
       <CardContent>
         <Box sx={{ width: '100%', height: 400 }}>
           <ResponsiveContainer>
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />

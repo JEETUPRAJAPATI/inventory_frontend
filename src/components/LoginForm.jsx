@@ -20,37 +20,38 @@ export default function LoginForm() {
   };
 
   const getRedirectPath = (user) => {
-    if (user.registrationType === 'production') {
-      // Map operator types to their corresponding routes
-      const operatorRoutes = {
-        'flexo-printing': '/production/flexo/dashboard',
-        'bag-making': '/production/bagmaking/dashboard',
-        'opsert-printing': '/production/opsert/dashboard'
-      };
-      
-      // If there's an operator type, use its specific route
-      if (user.operatorType && operatorRoutes[user.operatorType]) {
-        return operatorRoutes[user.operatorType];
+    console.log('userd',user);
+    // Handle production roles with operator types
+    if (user.registrationType === 'production' && user.operatorType) {
+      switch (user.operatorType) {
+        case 'flexo_printing':
+          return '/production/flexo/dashboard';
+        case 'w_cut_bagmaking':
+          return '/production/bagmaking/dashboard';
+        case 'd_cut_bagmaking':
+          return '/production/bagmaking/dashboard';
+        case 'opsert_printing':
+          return '/production/opsert/dashboard';
+        default:
+          return '/production/dashboard';
       }
-      
-      // Default production route if no specific operator type
-      return '/production/dashboard';
     }
-    
-    // Routes for other user types
+
+    // Handle other roles
     const routes = {
       sales: '/sales/dashboard',
       delivery: '/delivery/dashboard',
-      admin: '/admin/dashboard'
+      admin: '/admin/dashboard',
+      inventory: '/inventory/dashboard' // Added inventory route
     };
-    
+
     return routes[user.registrationType] || '/login';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const { user } = await login(formData);
       const redirectPath = getRedirectPath(user);

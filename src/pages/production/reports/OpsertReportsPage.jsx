@@ -1,13 +1,44 @@
 import { useState } from 'react';
-import { Grid } from '@mui/material';
-import ReportFilters from './components/ReportFilters';
+import { 
+  Box, 
+  Container,
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Grid,
+} from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import ReportSummary from './components/ReportSummary';
 import ReportTable from './components/ReportTable';
 import ReportCharts from './components/ReportCharts';
-import { useOpsertRecords } from '../../../hooks/useOpsertRecords';
-import { filterRecords } from '../../../utils/reportUtils';
+import ReportFilters from './components/ReportFilters';
+
+// Mock data for Opsert reports
+const mockOpsertRecords = [
+  {
+    id: 'OPS-001',
+    order_id: 'PO-001',
+    job_name: 'Premium D-Cut Bags',
+    bag_type: 'D-Cut',
+    quantity: 1000,
+    status: 'completed',
+    completion_date: '2024-02-20'
+  },
+  {
+    id: 'OPS-002',
+    order_id: 'PO-002',
+    job_name: 'Eco Friendly D-Cut',
+    bag_type: 'D-Cut',
+    quantity: 2000,
+    status: 'completed',
+    completion_date: '2024-02-19'
+  }
+];
 
 export default function OpsertReportsPage() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     dateRange: 'monthly',
     startDate: '',
@@ -15,42 +46,54 @@ export default function OpsertReportsPage() {
     status: 'all',
   });
 
-  const { records, isLoading } = useOpsertRecords();
-  const filteredRecords = filterRecords(records, filters);
-
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  const handleBack = () => {
+    navigate('/production/opsert/dashboard');
+  };
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <ReportFilters filters={filters} onFilterChange={handleFilterChange} />
-      </Grid>
-      
-      <Grid item xs={12}>
-        <ReportSummary records={filteredRecords} />
-      </Grid>
+    <Box sx={{ pb: 7 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={handleBack}
+            sx={{ mr: 2 }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h6" component="div">
+            Opsert Reports
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-      <Grid item xs={12}>
-        <ReportCharts records={filteredRecords} />
-      </Grid>
+      <Container maxWidth="lg" sx={{ mt: 2 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <ReportFilters 
+              filters={filters} 
+              onFilterChange={handleFilterChange} 
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <ReportSummary records={mockOpsertRecords} />
+          </Grid>
 
-      <Grid item xs={12}>
-        <ReportTable 
-          records={filteredRecords}
-          columns={[
-            { key: 'agent_name', label: 'Agent Name' },
-            { key: 'print_type', label: 'Print Type' },
-            { key: 'bag_type', label: 'Bag Type' },
-            { key: 'quantity', label: 'Quantity' },
-            { key: 'status', label: 'Status' },
-            { key: 'created_at', label: 'Date' }
-          ]}
-        />
-      </Grid>
-    </Grid>
+          <Grid item xs={12}>
+            <ReportCharts records={mockOpsertRecords} />
+          </Grid>
+
+          <Grid item xs={12}>
+            <ReportTable records={mockOpsertRecords} />
+          </Grid>
+        </Grid>
+      </Container>
+    </Box>
   );
 }

@@ -9,9 +9,17 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import { getStatusColor } from '../../../../utils/statusColors';
 
 export default function ReportTable({ records }) {
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'warning',
+      in_progress: 'info',
+      completed: 'success',
+    };
+    return colors[status] || 'default';
+  };
+
   return (
     <Card>
       <div className="p-4">
@@ -21,19 +29,19 @@ export default function ReportTable({ records }) {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>Order ID</TableCell>
               <TableCell>Job Name</TableCell>
-              <TableCell>Print Color</TableCell>
               <TableCell>Bag Type</TableCell>
               <TableCell>Quantity</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Date</TableCell>
+              <TableCell>Completion Date</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {records.map((record) => (
               <TableRow key={record.id}>
+                <TableCell>{record.order_id}</TableCell>
                 <TableCell>{record.job_name}</TableCell>
-                <TableCell>{record.print_color}</TableCell>
                 <TableCell>{record.bag_type}</TableCell>
                 <TableCell>{record.quantity}</TableCell>
                 <TableCell>
@@ -43,7 +51,7 @@ export default function ReportTable({ records }) {
                     size="small"
                   />
                 </TableCell>
-                <TableCell>{record.created_at}</TableCell>
+                <TableCell>{record.completion_date || '-'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

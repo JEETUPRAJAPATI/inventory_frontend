@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Card,
   Table,
@@ -9,139 +8,168 @@ import {
   TableRow,
   IconButton,
   Typography,
-  Button,
+  Chip,
+  Box,
+  Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
-import { Add, PictureAsPdf, Delete } from '@mui/icons-material';
-import InvoiceForm from './InvoiceForm';
-import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
+import { PictureAsPdf } from '@mui/icons-material';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import toast from 'react-hot-toast';
 
 const mockInvoices = [
   {
-    id: 1,
-    invoiceNumber: 'INV-00001',
+    id: 'INV-001',
+    orderId: 'ORD-001',
     customerName: 'John Doe',
-    jobName: 'Haldiram',
-    date: '2024-02-23',
-    total: 5900,
+    jobName: 'Premium Shopping Bags',
+    date: '2024-02-20',
+    amount: 15000,
+    status: 'delivered'
   },
   {
-    id: 2,
-    invoiceNumber: 'INV-00002',
+    id: 'INV-002',
+    orderId: 'ORD-002',
     customerName: 'Jane Smith',
-    jobName: 'Premium Bags',
-    date: '2024-02-24',
-    total: 7500,
-  },
+    jobName: 'Eco Friendly Bags',
+    date: '2024-02-19',
+    amount: 25000,
+    status: 'in_transit'
+  }
 ];
 
 export default function InvoiceList() {
-  const [formOpen, setFormOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const handleGenerateInvoice = (formData) => {
+  const handleDownloadInvoice = (invoice) => {
     try {
-      generateInvoicePDF(formData);
-      toast.success('Invoice generated successfully');
-      setFormOpen(false);
-    } catch (error) {
-      toast.error('Failed to generate invoice');
-      console.error(error);
-    }
-  };
-
-  const handleDelete = (invoice) => {
-    setSelectedInvoice(invoice);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    toast.success('Invoice deleted successfully');
-    setDeleteDialogOpen(false);
-  };
-
-  const handleDownloadPDF = (invoice) => {
-    try {
-      generateInvoicePDF(invoice);
+      generateInvoicePDF({
+        ...invoice,
+        invoiceNumber: invoice.id,
+        gstNumber: 'GST123456789',
+        subtotal: invoice.amount,
+        gst: invoice.amount * 0.18,
+        total: invoice.amount * 1.18
+      });
       toast.success('Invoice downloaded successfully');
     } catch (error) {
       toast.error('Failed to download invoice');
-      console.error(error);
     }
   };
 
+  const MobileCard = ({ invoice }) => (
+    <Card sx={{ mb: 2, p: 2 }}>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" color="text.secondary">
+          Invoice Details
+        </Typography>
+        <Divider sx={{ my: 1 }} />
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary">Invoice ID:</Typography>
+          <Typography variant="body2">{invoice.id}</Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary">Order ID:</Typography>
+          <Typography variant="body2">{invoice.orderId}</Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary">Customer:</Typography>
+          <Typography variant="body2">{invoice.customerName}</Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary">Job Name:</Typography>
+          <Typography variant="body2">{invoice.jobName}</Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary">Date:</Typography>
+          <Typography variant="body2">{invoice.date}</Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <Typography variant="body2" color="text.secondary">Status:</Typography>
+          <Chip
+            label={invoice.status.toUpperCase()}
+            color={invoice.status === 'delivered' ? 'success' : 'warning'}
+            size="small"
+          />
+        </Box>
+
+        <IconButton
+          color="primary"
+          onClick={() => handleDownloadInvoice(invoice)}
+          sx={{ width: '100%' }}
+        >
+          <PictureAsPdf /> <Typography sx={{ ml: 1 }}>Download Invoice</Typography>
+        </IconButton>
+      </Box>
+    </Card>
+  );
+
+  if (isMobile) {
+    return (
+      <Box>
+        <Typography variant="h6" sx={{ mb: 2 }}>Delivery Invoices</Typography>
+        {mockInvoices.map((invoice) => (
+          <MobileCard key={invoice.id} invoice={invoice} />
+        ))}
+      </Box>
+    );
+  }
+
   return (
-    <>
-      <Card>
-        <div className="flex justify-between items-center p-4">
-          <Typography variant="h6">Invoices</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Add />}
-            onClick={() => setFormOpen(true)}
-          >
-            Generate Invoice
-          </Button>
-        </div>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Invoice Number</TableCell>
-                <TableCell>Customer Name</TableCell>
-                <TableCell>Job Name</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Total Amount</TableCell>
-                <TableCell>Actions</TableCell>
+    <Card>
+      <div className="p-4">
+        <Typography variant="h6">Delivery Invoices</Typography>
+      </div>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Invoice ID</TableCell>
+              <TableCell>Order ID</TableCell>
+              <TableCell>Customer</TableCell>
+              <TableCell>Job Name</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {mockInvoices.map((invoice) => (
+              <TableRow key={invoice.id}>
+                <TableCell>{invoice.id}</TableCell>
+                <TableCell>{invoice.orderId}</TableCell>
+                <TableCell>{invoice.customerName}</TableCell>
+                <TableCell>{invoice.jobName}</TableCell>
+                <TableCell>{invoice.date}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={invoice.status.toUpperCase()}
+                    color={invoice.status === 'delivered' ? 'success' : 'warning'}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => handleDownloadInvoice(invoice)}
+                  >
+                    <PictureAsPdf />
+                  </IconButton>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {mockInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{invoice.customerName}</TableCell>
-                  <TableCell>{invoice.jobName}</TableCell>
-                  <TableCell>{invoice.date}</TableCell>
-                  <TableCell>₹{invoice.total}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleDownloadPDF(invoice)}
-                    >
-                      <PictureAsPdf />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(invoice)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
-
-      <InvoiceForm
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        onSubmit={handleGenerateInvoice}
-      />
-
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Invoice"
-        content="Are you sure you want to delete this invoice? This action cannot be undone."
-      />
-    </>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Card>
   );
 }

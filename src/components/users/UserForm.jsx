@@ -9,12 +9,15 @@ import {
 } from '@mui/material';
 import FormInput from '../common/FormInput';
 import FormSelect from '../common/FormSelect';
+import { registrationTypes } from '../../constants/userTypes';
+import { productionManagerBagTypes, operatorTypesByBag } from '../../constants/productionTypes';
 
 const initialFormData = {
   fullName: '',
   email: '',
   mobileNumber: '',
   registrationType: '',
+  bagType: '',
   operatorType: '',
 };
 
@@ -31,12 +34,22 @@ export default function UserForm({ open, onClose, onSubmit, user = null }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-      // Reset operatorType if registrationType is not production
-      ...(name === 'registrationType' && value !== 'production' ? { operatorType: '' } : {})
-    }));
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      
+      // Reset dependent fields
+      if (name === 'registrationType') {
+        newData.bagType = '';
+        newData.operatorType = '';
+      }
+      
+      // Reset operator type when bag type changes
+      if (name === 'bagType') {
+        newData.operatorType = '';
+      }
+      
+      return newData;
+    });
   };
 
   const handleSubmit = (e) => {
@@ -44,18 +57,9 @@ export default function UserForm({ open, onClose, onSubmit, user = null }) {
     onSubmit(formData);
   };
 
-  const registrationTypes = [
-    { value: 'admin', label: 'Admin' },
-    { value: 'sales', label: 'Sales Manager' },
-    { value: 'production', label: 'Production Manager' },
-    { value: 'delivery', label: 'Delivery Manager' },
-  ];
-
-  const operatorTypes = [
-    { value: 'flexo_printing', label: 'Flexo Printing' },
-    { value: 'bag_making', label: 'Bag Making' },
-    { value: 'opsert_printing', label: 'Opsert Printing' },
-  ];
+  const showBagTypeField = formData.registrationType === 'production_manager';
+  const showOperatorTypeField = showBagTypeField && formData.bagType;
+  const operatorOptions = formData.bagType ? operatorTypesByBag[formData.bagType] : [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -103,14 +107,28 @@ export default function UserForm({ open, onClose, onSubmit, user = null }) {
                 required
               />
             </Grid>
-            {formData.registrationType === 'production' && (
+
+            {showBagTypeField && (
+              <Grid item xs={12}>
+                <FormSelect
+                  label="Bag Making Type"
+                  name="bagType"
+                  value={formData.bagType}
+                  onChange={handleChange}
+                  options={productionManagerBagTypes}
+                  required
+                />
+              </Grid>
+            )}
+
+            {showOperatorTypeField && (
               <Grid item xs={12}>
                 <FormSelect
                   label="Operator Type"
                   name="operatorType"
                   value={formData.operatorType}
                   onChange={handleChange}
-                  options={operatorTypes}
+                  options={operatorOptions}
                   required
                 />
               </Grid>

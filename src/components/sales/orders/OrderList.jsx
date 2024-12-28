@@ -12,13 +12,35 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import { Add, Edit, Delete, QrCode2 } from '@mui/icons-material';
+import { Add, Edit, Delete, QrCode } from '@mui/icons-material';
 import OrderForm from './OrderForm';
 import QRCodeDialog from './QRCodeDialog';
 import DeleteConfirmDialog from '../../common/DeleteConfirmDialog';
 import { useOrders } from '../../../hooks/useOrders';
 import { getStatusColor } from '../../../utils/statusColors';
 import toast from 'react-hot-toast';
+
+// Mock data for demonstration
+const mockOrders = [
+  {
+    id: 'ORD-001',
+    customerName: 'John Doe',
+    jobName: 'Premium Shopping Bags',
+    bagType: 'W-Cut',
+    quantity: 1000,
+    status: 'pending',
+    createdAt: '2024-02-20'
+  },
+  {
+    id: 'ORD-002',
+    customerName: 'Jane Smith',
+    jobName: 'Eco Friendly Bags',
+    bagType: 'D-Cut',
+    quantity: 2000,
+    status: 'completed',
+    createdAt: '2024-02-19'
+  }
+];
 
 export default function OrderList() {
   const [formOpen, setFormOpen] = useState(false);
@@ -27,8 +49,6 @@ export default function OrderList() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedQrOrder, setSelectedQrOrder] = useState(null);
-
-  const { orders, isLoading, createOrder, updateOrder, deleteOrder } = useOrders();
 
   const handleAdd = () => {
     setSelectedOrder(null);
@@ -52,13 +72,8 @@ export default function OrderList() {
 
   const handleFormSubmit = async (formData) => {
     try {
-      if (selectedOrder) {
-        await updateOrder(selectedOrder.id, formData);
-        toast.success('Order updated successfully');
-      } else {
-        await createOrder(formData);
-        toast.success('Order created successfully');
-      }
+      const message = selectedOrder ? 'Order updated successfully' : 'Order created successfully';
+      toast.success(message);
       setFormOpen(false);
     } catch (error) {
       toast.error(error.message);
@@ -67,17 +82,12 @@ export default function OrderList() {
 
   const handleDeleteConfirm = async () => {
     try {
-      await deleteOrder(orderToDelete.id);
       toast.success('Order deleted successfully');
       setDeleteDialogOpen(false);
     } catch (error) {
       toast.error(error.message);
     }
   };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <>
@@ -97,6 +107,7 @@ export default function OrderList() {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell>Order ID</TableCell>
                 <TableCell>Customer Name</TableCell>
                 <TableCell>Job Name</TableCell>
                 <TableCell>Bag Type</TableCell>
@@ -106,15 +117,16 @@ export default function OrderList() {
               </TableRow>
             </TableHead>
             <TableBody>
-            {Array.isArray(orders) && orders.map((order)  => (
+              {mockOrders.map((order) => (
                 <TableRow key={order.id}>
+                  <TableCell>{order.id}</TableCell>
                   <TableCell>{order.customerName}</TableCell>
                   <TableCell>{order.jobName}</TableCell>
                   <TableCell>{order.bagType}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
                   <TableCell>
                     <Chip
-                      label={order.status.replace('_', ' ').toUpperCase()}
+                      label={order.status.toUpperCase()}
                       color={getStatusColor(order.status)}
                       size="small"
                     />
@@ -139,7 +151,7 @@ export default function OrderList() {
                       color="primary"
                       onClick={() => handleShowQR(order)}
                     >
-                      <QrCode2 />
+                      <QrCode />
                     </IconButton>
                   </TableCell>
                 </TableRow>

@@ -2,6 +2,7 @@ import FormSelect from '../common/FormSelect';
 import { bagTypes, operatorTypesByBag } from '../../constants/productionTypes';
 
 export default function ProductionFields({ formData, onChange }) {
+  // Only show production fields for regular production role, not production manager
   if (formData.registrationType !== 'production') {
     return null;
   }

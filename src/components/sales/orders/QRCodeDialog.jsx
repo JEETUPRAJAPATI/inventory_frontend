@@ -1,35 +1,50 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography } from '@mui/material';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function QRCodeDialog({ open, onClose, orderData }) {
   if (!orderData) return null;
 
-  const orderDetails = {
-    id: orderData.id,
-    customerName: orderData.customerName,
-    jobName: orderData.jobName,
-    bagType: orderData.bagType,
-    quantity: orderData.quantity,
-    status: orderData.status,
-    createdAt: orderData.createdAt
+  // Only include essential data for scanning
+  const qrData = {
+    orderId: orderData.id,
+    jobName: orderData.jobName
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Order QR Code</DialogTitle>
-      <DialogContent sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-        <QRCodeSVG
-          value={JSON.stringify(orderDetails)}
-          size={256}
-          level="H"
-          includeMargin
-        />
+      <DialogContent>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          py: 3 
+        }}>
+          <QRCodeSVG
+            value={JSON.stringify(qrData)}
+            size={256}
+            level="H"
+            includeMargin
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Scan this QR code to get order details
+          </Typography>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2">
+              <strong>Order ID:</strong> {orderData.id}
+            </Typography>
+            <Typography variant="body2">
+              <strong>Job Name:</strong> {orderData.jobName}
+            </Typography>
+          </Box>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
-        <Button
+        <Button 
           variant="contained"
           onClick={() => {
+            // Create a temporary canvas to convert SVG to PNG
             const svg = document.querySelector('.QRCode svg');
             const svgData = new XMLSerializer().serializeToString(svg);
             const canvas = document.createElement('canvas');
@@ -48,7 +63,7 @@ export default function QRCodeDialog({ open, onClose, orderData }) {
             img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
           }}
         >
-          Download
+          Download QR Code
         </Button>
       </DialogActions>
     </Dialog>
