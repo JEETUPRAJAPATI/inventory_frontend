@@ -1,17 +1,18 @@
-export const getRoleBasedRoute = (registrationType, operatorType = null) => {
-  // Handle production roles with operator types
-  if (registrationType === 'production' && operatorType) {
-    switch (operatorType) {
-      case 'flexo_printing':
-        return '/production/flexo/dashboard';
-      case 'w_cut_bagmaking':
+export const getRoleBasedRoute = (registrationType, bagType, operatorType = null) => {
+  // Handle production roles
+  if (registrationType === 'production') {
+    if (bagType === 'w_cut') {
+      if (operatorType === 'bag_making') {
         return '/production/wcut/bagmaking/dashboard';
-      case 'd_cut_bagmaking':
+      }
+      return '/production/flexo/dashboard';
+    }
+    
+    if (bagType === 'd_cut') {
+      if (operatorType === 'bag_making') {
         return '/production/dcut/bagmaking/dashboard';
-      case 'opsert_printing':
-        return '/production/opsert/dashboard';
-      default:
-        return '/production/dashboard';
+      }
+      return '/production/opsert/dashboard';
     }
   }
 
@@ -20,7 +21,6 @@ export const getRoleBasedRoute = (registrationType, operatorType = null) => {
     admin: '/admin/dashboard',
     sales: '/sales/dashboard',
     delivery: '/delivery/dashboard',
-    production: '/production/dashboard',
     production_manager: '/production/manager/dashboard',
     inventory: '/inventory/dashboard'
   };

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { getRoleBasedRoute } from '../utils/roleUtils';
 import toast from 'react-hot-toast';
 import FormInput from './common/FormInput';
 import Button from './common/Button';
@@ -19,42 +20,17 @@ export default function LoginForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const getRedirectPath = (user) => {
-    console.log('userd',user);
-    // Handle production roles with operator types
-    if (user.registrationType === 'production' && user.operatorType) {
-      switch (user.operatorType) {
-        case 'flexo_printing':
-          return '/production/flexo/dashboard';
-        case 'w_cut_bagmaking':
-          return '/production/bagmaking/dashboard';
-        case 'd_cut_bagmaking':
-          return '/production/bagmaking/dashboard';
-        case 'opsert_printing':
-          return '/production/opsert/dashboard';
-        default:
-          return '/production/dashboard';
-      }
-    }
-
-    // Handle other roles
-    const routes = {
-      sales: '/sales/dashboard',
-      delivery: '/delivery/dashboard',
-      admin: '/admin/dashboard',
-      inventory: '/inventory/dashboard' // Added inventory route
-    };
-
-    return routes[user.registrationType] || '/login';
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const { user } = await login(formData);
-      const redirectPath = getRedirectPath(user);
+      const redirectPath = getRoleBasedRoute(
+        user.registrationType,
+        user.bagType,
+        user.operatorType
+      );
       toast.success('Login successful!');
       navigate(redirectPath);
     } catch (error) {
