@@ -7,6 +7,8 @@ import {
   ListItemText,
   ListItemIcon,
   Typography,
+  Divider,
+  Box,
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -48,22 +50,47 @@ const activities = [
 
 export default function RecentActivities() {
   return (
-    <Card>
-      <CardHeader title="Recent Activities" />
-      <CardContent>
+    <Card sx={{ height: '100%' }}>
+      <CardHeader 
+        title="Recent Activities"
+        sx={{ 
+          '& .MuiCardHeader-title': {
+            fontSize: '1.25rem',
+            fontWeight: 600
+          }
+        }}
+      />
+      <Divider />
+      <CardContent sx={{ p: 0 }}>
         <List>
-          {activities.map((activity) => (
-            <ListItem key={activity.id}>
-              <ListItemIcon>{activity.icon}</ListItemIcon>
-              <ListItemText
-                primary={activity.text}
-                secondary={
-                  <Typography variant="caption" color="text.secondary">
-                    {activity.time}
-                  </Typography>
-                }
-              />
-            </ListItem>
+          {activities.map((activity, index) => (
+            <Box key={activity.id}>
+              <ListItem sx={{ px: 3, py: 2 }}>
+                <ListItemIcon>
+                  <Box
+                    sx={{
+                      backgroundColor: (theme) => theme.palette.grey[100],
+                      borderRadius: '50%',
+                      p: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {activity.icon}
+                  </Box>
+                </ListItemIcon>
+                <ListItemText
+                  primary={activity.text}
+                  secondary={
+                    <Typography variant="caption" color="text.secondary">
+                      {activity.time}
+                    </Typography>
+                  }
+                />
+              </ListItem>
+              {index < activities.length - 1 && <Divider />}
+            </Box>
           ))}
         </List>
       </CardContent>

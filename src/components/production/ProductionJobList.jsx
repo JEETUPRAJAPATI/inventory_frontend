@@ -16,16 +16,16 @@ import { Edit, Delete } from '@mui/icons-material';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 
 const mockJobs = [
-  { 
-    id: 1, 
-    name: 'Product A Production', 
+  {
+    id: 1,
+    name: 'Product A Production',
     status: 'In Progress',
     startDate: '2024-02-10',
     endDate: '2024-02-15',
   },
-  { 
-    id: 2, 
-    name: 'Product B Production', 
+  {
+    id: 2,
+    name: 'Product B Production',
     status: 'Pending',
     startDate: '2024-02-12',
     endDate: '2024-02-18',
@@ -54,7 +54,6 @@ export default function ProductionJobList() {
     <Card>
       <div className="flex justify-between items-center p-4">
         <Typography variant="h6">Production Jobs</Typography>
-        <Button variant="contained" color="primary">Add Job</Button>
       </div>
       <TableContainer>
         <Table>
@@ -72,8 +71,8 @@ export default function ProductionJobList() {
               <TableRow key={job.id}>
                 <TableCell>{job.name}</TableCell>
                 <TableCell>
-                  <Chip 
-                    label={job.status} 
+                  <Chip
+                    label={job.status}
                     color={getStatusColor(job.status)}
                     size="small"
                   />
@@ -84,8 +83,8 @@ export default function ProductionJobList() {
                   <IconButton size="small" color="primary">
                     <Edit />
                   </IconButton>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     color="error"
                     onClick={() => handleDelete(job)}
                   >

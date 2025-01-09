@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../services/api';
+import authService from '../services/authService';
 import toast from 'react-hot-toast';
-import FormInput from './common/FormInput';
-import FormSelect from './common/FormSelect';
-import FormTextarea from './common/FormTextarea';
-import Button from './common/Button';
+import RegisterFormFields from './auth/RegisterFormFields';
+import { validateRegistration } from '../utils/validation';
 
 export default function RegisterForm() {
   const navigate = useNavigate();
@@ -17,45 +15,46 @@ export default function RegisterForm() {
     password: '',
     confirmPassword: '',
     address: '',
-    registrationType: ''
+    registrationType: '',
+    bagType: '',
+    operatorType: ''
   });
-
-  const registrationTypes = [
-    { value: 'sales', label: 'Sales Manager' },
-    { value: 'production', label: 'Production Manager' },
-    { value: 'delivery', label: 'Delivery Manager' },
-    { value: 'admin', label: 'Super Admin' },
-  ];
-
-  const operatorTypes = [
-    { value: 'flexo_printing', label: 'Flexo Printing Operator' },
-    { value: 'bag_making', label: 'Bag Making Operator' },
-    { value: 'opsert_printing', label: 'Opsert Printing Operator' },
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => {
-      // If changing registration type and it's not production,
-      // reset the operatorType
+      const newData = {
+        ...prev,
+        [name]: value,
+      };
+
+      // Reset dependent fields when registration type changes
       if (name === 'registrationType' && value !== 'production') {
-        return { ...prev, [name]: value, operatorType: '' };
+        newData.bagType = '';
+        newData.operatorType = '';
       }
-      return { ...prev, [name]: value };
+
+      // Reset operator type when bag type changes
+      if (name === 'bagType') {
+        newData.operatorType = '';
+      }
+
+      return newData;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+    const validationError = validateRegistration(formData);
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
     try {
       setLoading(true);
-      await register(formData);
+      await authService.register(formData);
       toast.success('Registration successful!');
       navigate('/login');
     } catch (error) {
@@ -76,91 +75,17 @@ export default function RegisterForm() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <FormInput
-              label="Full Name"
-              id="fullName"
-              name="fullName"
-              required
-              value={formData.fullName}
+            <RegisterFormFields 
+              formData={formData}
               onChange={handleChange}
-              placeholder="Enter your full name"
             />
-
-            <FormInput
-              label="Email"
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              autoComplete="email"
-            />
-
-            <FormInput
-              label="Mobile Number"
-              id="mobileNumber"
-              name="mobileNumber"
-              type="tel"
-              required
-              value={formData.mobileNumber}
-              onChange={handleChange}
-              placeholder="Enter your mobile number"
-            />
-
-            <FormInput
-              label="Password"
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              autoComplete="new-password"
-            />
-
-            <FormInput
-              label="Confirm Password"
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              autoComplete="new-password"
-            />
-
-            <FormTextarea
-              label="Address"
-              id="address"
-              name="address"
-              required
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Enter your address"
-            />
-
-            <FormSelect
-              label="Registration Type"
-              id="registrationType"
-              name="registrationType"
-              required
-              value={formData.registrationType}
-              onChange={handleChange}
-              options={registrationTypes}
-            />
-
-
-
-            <Button
+            <button
               type="submit"
               disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
             >
               {loading ? 'Registering...' : 'Register'}
-            </Button>
+            </button>
           </form>
         </div>
       </div>

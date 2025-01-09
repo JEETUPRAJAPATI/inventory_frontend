@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/constants';
+import authService from './authService';
 
-const API_BASE_URL = 'https://inventory-zmsp.onrender.com/api';
-
+// Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -9,23 +10,25 @@ const api = axios.create({
   },
 });
 
-export const register = async (userData) => {
-  try {
-    const response = await api.post('/auth/register', userData);
-    console.log('data',response);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error.message;
+// Add auth token to requests
+api.interceptors.request.use((config) => {
+  const token = authService.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-};
+  return config;
+});
 
-export const login = async (credentials) => {
-  try {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error.message;
+// Handle response errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      authService.logout();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
   }
-};
+);
 
-
+export default api;

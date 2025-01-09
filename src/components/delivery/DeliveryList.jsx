@@ -1,109 +1,71 @@
-import { useState } from 'react';
-import {
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Typography,
-  Button,
-  Chip,
-} from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
-import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
+import { useState, useMemo } from 'react';
+import { Box, Typography } from '@mui/material';
+import DeliveryStatusTabs from './DeliveryStatusTabs';
+import DeliveryTable from './DeliveryTable';
+import toast from 'react-hot-toast';
 
+// Mock data - replace with actual API call
 const mockDeliveries = [
-  { 
-    id: 1, 
-    orderNumber: 'ORD-001',
-    customer: 'John Doe',
-    status: 'In Transit',
-    deliveryDate: '2024-02-10',
+  {
+    id: 'DEL001',
+    orderId: 'ORD-001',
+    customerName: 'John Doe',
+    address: '123 Main St, City',
+    deliveryDate: '2024-02-25',
+    status: 'pending',
+    contact: '+1234567890'
   },
-  { 
-    id: 2, 
-    orderNumber: 'ORD-002',
-    customer: 'Jane Smith',
-    status: 'Delivered',
-    deliveryDate: '2024-02-09',
+  {
+    id: 'DEL002',
+    orderId: 'ORD-002',
+    customerName: 'Jane Smith',
+    address: '456 Oak Ave, Town',
+    deliveryDate: '2024-02-26',
+    status: 'in_transit',
+    contact: '+0987654321'
   },
+  {
+    id: 'DEL003',
+    orderId: 'ORD-003',
+    customerName: 'Mike Johnson',
+    address: '789 Pine St, Village',
+    deliveryDate: '2024-02-24',
+    status: 'delivered',
+    contact: '+1122334455'
+  }
 ];
 
 export default function DeliveryList() {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [activeStatus, setActiveStatus] = useState('pending');
 
-  const handleDelete = (delivery) => {
-    setSelectedDelivery(delivery);
-    setDeleteDialogOpen(true);
-  };
+  const filteredDeliveries = useMemo(() => {
+    if (activeStatus === 'pending') {
+      return mockDeliveries.filter(d => ['pending', 'in_transit'].includes(d.status));
+    }
+    return mockDeliveries.filter(d => d.status === 'delivered');
+  }, [activeStatus]);
 
-  const getStatusColor = (status) => {
-    const colors = {
-      'In Transit': 'primary',
-      'Pending': 'warning',
-      'Delivered': 'success',
-    };
-    return colors[status] || 'default';
+  const handleStatusUpdate = (deliveryId, newStatus) => {
+    // Replace with actual API call
+    toast.success(`Delivery ${deliveryId} status updated to ${newStatus}`);
   };
 
   return (
-    <Card>
-      <div className="flex justify-between items-center p-4">
-        <Typography variant="h6">Deliveries</Typography>
-        <Button variant="contained" color="primary">Add Delivery</Button>
-      </div>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Order Number</TableCell>
-              <TableCell>Customer</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Delivery Date</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {mockDeliveries.map((delivery) => (
-              <TableRow key={delivery.id}>
-                <TableCell>{delivery.orderNumber}</TableCell>
-                <TableCell>{delivery.customer}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={delivery.status} 
-                    color={getStatusColor(delivery.status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>{delivery.deliveryDate}</TableCell>
-                <TableCell>
-                  <IconButton size="small" color="primary">
-                    <Edit />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    color="error"
-                    onClick={() => handleDelete(delivery)}
-                  >
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={() => setDeleteDialogOpen(false)}
-        title="Delete Delivery"
-        content="Are you sure you want to delete this delivery? This action cannot be undone."
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        Delivery Management
+      </Typography>
+      
+      <DeliveryStatusTabs
+        activeStatus={activeStatus}
+        onStatusChange={setActiveStatus}
       />
-    </Card>
+      
+      <DeliveryTable
+        deliveries={filteredDeliveries}
+        onStatusUpdate={handleStatusUpdate}
+        viewOnly={true} // Delivery users can only view and update status
+      />
+    </Box>
   );
 }

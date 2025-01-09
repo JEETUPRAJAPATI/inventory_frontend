@@ -3,11 +3,13 @@ import { Box, CssBaseline, useMediaQuery, useTheme } from '@mui/material';
 import Sidebar from '../components/navigation/Sidebar';
 import Header from '../components/navigation/Header';
 import Breadcrumbs from '../components/navigation/Breadcrumbs';
+import { useAuth } from '../hooks/useAuth';
 
 export default function AdminLayout({ children }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const { user } = useAuth();
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

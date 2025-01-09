@@ -1,0 +1,76 @@
+export const bagMakingOrders = [
+  {
+    id: 'ORD-001',
+    role_size: '12x15',
+    order_id: 'PO-001',
+    job_name: 'Premium Shopping Bags',
+    bag_type: 'W-Cut',
+    bag_color: 'Blue',
+    bag_size: '12x15x4',
+    gsm: '90',
+    quantity: 1000,
+    weight: '500',
+    qnt: '100',
+    status: 'pending'
+  },
+  {
+    id: 'ORD-002',
+    role_size: '10x12',
+    order_id: 'PO-002',
+    job_name: 'Eco Friendly Bags',
+    bag_type: 'W-Cut',
+    bag_color: 'Green',
+    bag_size: '10x12x3',
+    gsm: '80',
+    quantity: 2000,
+    weight: '800',
+    qnt: '150',
+    status: 'in_progress'
+  },
+  // Completed orders
+  {
+    id: 'ORD-003',
+    role_size: '15x20',
+    order_id: 'PO-003',
+    job_name: 'Luxury Shopping Bags',
+    bag_type: 'W-Cut',
+    bag_color: 'Black',
+    bag_size: '15x20x5',
+    gsm: '100',
+    quantity: 3000,
+    weight: '900',
+    qnt: '200',
+    status: 'completed',
+    completion_date: '2024-02-20'
+  },
+  {
+    id: 'ORD-004',
+    role_size: '8x10',
+    order_id: 'PO-004',
+    job_name: 'Gift Bags Small',
+    bag_type: 'D-Cut',
+    bag_color: 'Red',
+    bag_size: '8x10x3',
+    gsm: '70',
+    quantity: 5000,
+    weight: '600',
+    qnt: '250',
+    status: 'completed',
+    completion_date: '2024-02-19'
+  },
+  {
+    id: 'ORD-005',
+    role_size: '20x25',
+    order_id: 'PO-005',
+    job_name: 'Jumbo Shopping Bags',
+    bag_type: 'W-Cut',
+    bag_color: 'White',
+    bag_size: '20x25x8',
+    gsm: '120',
+    quantity: 1500,
+    weight: '1200',
+    qnt: '180',
+    status: 'completed',
+    completion_date: '2024-02-18'
+  }
+];

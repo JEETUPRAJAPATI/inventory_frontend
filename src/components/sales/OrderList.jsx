@@ -10,6 +10,7 @@ import {
   IconButton,
   Typography,
   Button,
+  Chip,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
@@ -26,11 +27,6 @@ export default function OrderList() {
   const handleDelete = (order) => {
     setSelectedOrder(order);
     setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    // Handle delete logic here
-    setDeleteDialogOpen(false);
   };
 
   return (
@@ -55,7 +51,13 @@ export default function OrderList() {
               <TableRow key={order.id}>
                 <TableCell>{order.customer}</TableCell>
                 <TableCell>{order.amount}</TableCell>
-                <TableCell>{order.status}</TableCell>
+                <TableCell>
+                  <Chip 
+                    label={order.status} 
+                    color={order.status === 'Completed' ? 'success' : 'warning'}
+                    size="small"
+                  />
+                </TableCell>
                 <TableCell>{order.date}</TableCell>
                 <TableCell>
                   <IconButton size="small" color="primary">
@@ -77,7 +79,7 @@ export default function OrderList() {
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={confirmDelete}
+        onConfirm={() => setDeleteDialogOpen(false)}
         title="Delete Order"
         content="Are you sure you want to delete this order? This action cannot be undone."
       />
