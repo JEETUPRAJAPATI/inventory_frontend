@@ -186,25 +186,15 @@ export default function BagMakingOrderList({ status, bagType }) {
                   </TableCell>
                   <TableCell>
                     {order.status === 'pending' && (
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          startIcon={<Print />}
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => handleStartProcess(order.id)}
-                        >
-                          Start Process
-                        </Button>
-                        <Button
-                          startIcon={<QrCodeScanner />}
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleVerify(order)}
-                        >
-                          Verify
-                        </Button>
-                      </Box>
+                      <Button
+                        startIcon={<Print />}
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => handleStartPrinting(order.id)}
+                      >
+                        Start Printing
+                      </Button>
                     )}
                     {order.status === 'in_progress' && (
                       <Button
@@ -212,32 +202,21 @@ export default function BagMakingOrderList({ status, bagType }) {
                         variant="contained"
                         color="success"
                         size="small"
-                        onClick={() => handleCompleteOrder(order.id)}
+                        onClick={() => handleUpdateStatus(order.id)}
                       >
                         Complete
                       </Button>
                     )}
                     {order.status === 'completed' && (
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          startIcon={<Receipt />}
-                          variant="contained"
-                          color="secondary"
-                          size="small"
-                          onClick={() => handleBillingClick(order)}
-                        >
-                          Direct Billing
-                        </Button>
-                        <Button
-                          startIcon={<LocalShipping />}
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => handleMoveToDelivery(order.id)}
-                        >
-                          Move to Delivery
-                        </Button>
-                      </Box>
+                      <Button
+                        startIcon={<LocalShipping />}
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => handleMoveToDelivery(order.id)}
+                      >
+                        Move to Delivery
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
