@@ -20,51 +20,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import VerifyOrderDialog from './VerifyOrderDialog';
 
-// Mock data for testing
-const mockOrders = [
-  {
-    id: 'BAG-001',
-    order_id: 'ORD-001',
-    job_name: 'Premium D-Cut Bags',
-    bag_type: 'D-Cut',
-    fabric_type: 'Polyester',
-    gsm: '90',
-    fabric_color: 'Blue',
-    bag_size: '12x15x4',
-    quantity: 1000,
-    remarks: '', // Empty if no remarks
-    status: 'pending'
-  },
-  {
-    id: 'BAG-002',
-    order_id: 'ORD-002',
-    job_name: 'Eco D-Cut Bags',
-    bag_type: 'D-Cut',
-    fabric_type: 'Recycled Polyester',
-    gsm: '80',
-    fabric_color: 'Green',
-    bag_size: '10x12x3',
-    quantity: 2000,
-    remarks: 'Urgent delivery required',
-    status: 'in_progress'
-  },
-  {
-    id: 'BAG-003',
-    order_id: 'ORD-003',
-    job_name: 'Luxury D-Cut Bags',
-    bag_type: 'D-Cut',
-    fabric_type: 'Silk',
-    gsm: '100',
-    fabric_color: 'Black',
-    bag_size: '15x20x5',
-    quantity: 3000,
-    remarks: 'Luxury quality, high price',
-    status: 'completed',
-    billingStatus: 'pending'
-  }
-];
-
-export default function BagMakingOrderList({ status, bagType }) {
+export default function BagMakingOrderList({ status = 'pending', bagType }) {
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
@@ -92,9 +48,7 @@ export default function BagMakingOrderList({ status, bagType }) {
   const handleVerifyComplete = (orderId, verifiedData) => {
     setOrders(prevOrders =>
       prevOrders.map(order =>
-        order.id === orderId
-          ? { ...order, ...verifiedData, status: 'in_progress' }
-          : order
+        order.id === orderId ? { ...order, ...verifiedData, status: 'in_progress' } : order
       )
     );
     setVerifyDialogOpen(false);
@@ -102,7 +56,7 @@ export default function BagMakingOrderList({ status, bagType }) {
     toast.success('Order verified and marked as active');
   };
 
-  const handleStartProcess = (orderId) => {
+  const handleStartPrinting = (orderId) => {
     if (orders.some(o => o.status === 'in_progress')) {
       toast.error('A job is already active. Please complete it first.');
       return;
@@ -110,12 +64,10 @@ export default function BagMakingOrderList({ status, bagType }) {
     toast.success('Process started successfully');
   };
 
-  const handleCompleteOrder = (orderId) => {
+  const handleUpdateStatus = (orderId) => {
     setOrders(prevOrders =>
       prevOrders.map(order =>
-        order.id === orderId
-          ? { ...order, status: 'completed', billingStatus: 'pending' }
-          : order
+        order.id === orderId ? { ...order, status: 'completed', billingStatus: 'pending' } : order
       )
     );
     toast.success('Order completed successfully');
@@ -129,9 +81,7 @@ export default function BagMakingOrderList({ status, bagType }) {
   const handleConfirmBilling = () => {
     setOrders(prevOrders =>
       prevOrders.map(order =>
-        order.id === orderToBill.id
-          ? { ...order, billingStatus: 'completed' }
-          : order
+        order.id === orderToBill.id ? { ...order, billingStatus: 'completed' } : order
       )
     );
     setConfirmBillingOpen(false);
@@ -141,6 +91,115 @@ export default function BagMakingOrderList({ status, bagType }) {
 
   const handleMoveToDelivery = (orderId) => {
     toast.success('Order moved to Delivery Process');
+  };
+
+  const renderActions = (order) => {
+    if (bagType === 'wcut') {
+      // W-Cut actions (same as Opsert)
+      switch (order.status) {
+        case 'pending':
+          return (
+            <Button
+              startIcon={<Print />}
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => handleStartPrinting(order.id)}
+            >
+              Start Process
+            </Button>
+          );
+        case 'in_progress':
+          return (
+            <Button
+              startIcon={<Update />}
+              variant="contained"
+              color="success"
+              size="small"
+              onClick={() => handleUpdateStatus(order.id)}
+            >
+              Complete
+            </Button>
+          );
+        case 'completed':
+          return (
+            <Button
+              startIcon={<LocalShipping />}
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => handleMoveToDelivery(order.id)}
+            >
+              Move to Delivery
+            </Button>
+          );
+        default:
+          return null;
+      }
+    } else {
+      // D-Cut actions (same as Flexo)
+      switch (order.status) {
+        case 'pending':
+          return (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                startIcon={<Print />}
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleStartPrinting(order.id)}
+              >
+                Start Process
+              </Button>
+              <Button
+                startIcon={<QrCodeScanner />}
+                variant="outlined"
+                size="small"
+                onClick={() => handleVerify(order)}
+              >
+                Verify
+              </Button>
+            </Box>
+          );
+        case 'in_progress':
+          return (
+            <Button
+              startIcon={<Update />}
+              variant="contained"
+              color="success"
+              size="small"
+              onClick={() => handleUpdateStatus(order.id)}
+            >
+              Complete
+            </Button>
+          );
+        case 'completed':
+          return (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                startIcon={<Receipt />}
+                variant="contained"
+                color="secondary"
+                size="small"
+                onClick={() => handleBillingClick(order)}
+              >
+                Direct Billing
+              </Button>
+              <Button
+                startIcon={<LocalShipping />}
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleMoveToDelivery(order.id)}
+              >
+                Move to Delivery
+              </Button>
+            </Box>
+          );
+        default:
+          return null;
+      }
+    }
   };
 
   const filteredOrders = orders.filter(order => order.status === status);
@@ -168,13 +227,13 @@ export default function BagMakingOrderList({ status, bagType }) {
             <TableBody>
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell>{order.order_id}</TableCell>
-                  <TableCell>{order.job_name}</TableCell>
-                  <TableCell>{order.bag_type}</TableCell>
-                  <TableCell>{order.fabric_type || '-'}</TableCell>
+                  <TableCell>{order.orderId}</TableCell>
+                  <TableCell>{order.jobName}</TableCell>
+                  <TableCell>{order.bagType}</TableCell>
+                  <TableCell>{order.fabricType || '-'}</TableCell>
                   <TableCell>{order.gsm}</TableCell>
-                  <TableCell>{order.fabric_color}</TableCell>
-                  <TableCell>{order.bag_size}</TableCell>
+                  <TableCell>{order.fabricColor}</TableCell>
+                  <TableCell>{order.bagSize}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
                   <TableCell>{order.remarks || '-'}</TableCell>
                   <TableCell>
@@ -185,39 +244,7 @@ export default function BagMakingOrderList({ status, bagType }) {
                     />
                   </TableCell>
                   <TableCell>
-                    {order.status === 'pending' && (
-                      <Button
-                        startIcon={<Print />}
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => handleStartPrinting(order.id)}
-                      >
-                        Start Printing
-                      </Button>
-                    )}
-                    {order.status === 'in_progress' && (
-                      <Button
-                        startIcon={<Update />}
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        onClick={() => handleUpdateStatus(order.id)}
-                      >
-                        Complete
-                      </Button>
-                    )}
-                    {order.status === 'completed' && (
-                      <Button
-                        startIcon={<LocalShipping />}
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => handleMoveToDelivery(order.id)}
-                      >
-                        Move to Delivery
-                      </Button>
-                    )}
+                    {renderActions(order)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -226,38 +253,86 @@ export default function BagMakingOrderList({ status, bagType }) {
         </TableContainer>
       </Card>
 
-      <VerifyOrderDialog
-        open={verifyDialogOpen}
-        onClose={() => setVerifyDialogOpen(false)}
-        order={selectedOrder}
-        onVerifyComplete={handleVerifyComplete}
-      />
+      {bagType === 'dcut' && (
+        <>
+          <VerifyOrderDialog
+            open={verifyDialogOpen}
+            onClose={() => setVerifyDialogOpen(false)}
+            order={selectedOrder}
+            onVerifyComplete={handleVerifyComplete}
+          />
 
-      <Dialog
-        open={confirmBillingOpen}
-        onClose={() => setConfirmBillingOpen(false)}
-      >
-        <DialogTitle>Confirm Direct Billing</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to move this order to billing?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Order ID: {orderToBill?.order_id}<br />
-            Job Name: {orderToBill?.job_name}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmBillingOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleConfirmBilling}
+          <Dialog
+            open={confirmBillingOpen}
+            onClose={() => setConfirmBillingOpen(false)}
           >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <DialogTitle>Confirm Direct Billing</DialogTitle>
+            <DialogContent>
+              <Typography>
+                Are you sure you want to move this order to billing?
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Order ID: {orderToBill?.orderId}<br />
+                Job Name: {orderToBill?.jobName}
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setConfirmBillingOpen(false)}>Cancel</Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleConfirmBilling}
+              >
+                Confirm
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
+      )}
     </>
   );
 }
+
+// Mock data for testing
+const mockOrders = [
+  {
+    id: 'BAG-001',
+    orderId: 'ORD-001',
+    jobName: 'Premium Shopping Bags',
+    bagType: 'W-Cut',
+    fabricType: 'Polyester',
+    gsm: '90',
+    fabricColor: 'Blue',
+    bagSize: '12x15x4',
+    quantity: 1000,
+    remarks: '',
+    status: 'pending'
+  },
+  {
+    id: 'BAG-002',
+    orderId: 'ORD-002',
+    jobName: 'Eco Friendly Bags',
+    bagType: 'W-Cut',
+    fabricType: 'Recycled Polyester',
+    gsm: '80',
+    fabricColor: 'Green',
+    bagSize: '10x12x3',
+    quantity: 2000,
+    remarks: 'Urgent delivery required',
+    status: 'in_progress'
+  },
+  {
+    id: 'BAG-003',
+    orderId: 'ORD-003',
+    jobName: 'Luxury Shopping Bags',
+    bagType: 'W-Cut',
+    fabricType: 'Premium',
+    gsm: '100',
+    fabricColor: 'Black',
+    bagSize: '15x20x5',
+    quantity: 3000,
+    remarks: 'High priority',
+    status: 'completed',
+    billingStatus: 'pending'
+  }
+];
