@@ -24,24 +24,32 @@ export default function ProductionTable({ type }) {
     {
       id: 1,
       orderId: 'ORD-001',
-      selendor_size: '12x15',
-      role_size: '10x12',
+
+      jobName: 'Packaging Bags',
+      gsm: 120,
       quantity: 1000,
       weight: 500,
       qnt: 100,
-      status: 'Pending'
+      printColour: 'Blue',
+      fabricColour: 'White',
+      fabricQuality: 'High',
+      status: 'Pending',
     },
     {
       id: 2,
       orderId: 'ORD-002',
-      selendor_size: '15x18',
-      role_size: '12x15',
+      jobName: 'Storage Bags',
+      gsm: 150,
       quantity: 2000,
       weight: 800,
       qnt: 150,
-      status: 'In Progress'
-    }
+      printColour: 'Red',
+      fabricColour: 'Black',
+      fabricQuality: 'Premium',
+      status: 'In Progress',
+    },
   ];
+
 
   const handleUpdate = (record) => {
     setSelectedRecord(record);
@@ -53,18 +61,19 @@ export default function ProductionTable({ type }) {
       <Typography variant="h6" gutterBottom>
         {type} Production Records
       </Typography>
-      
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Order ID</TableCell>
-              <TableCell>Selendor Size</TableCell>
-              <TableCell>Role Size</TableCell>
+              <TableCell>Job Name</TableCell>
+              <TableCell>Bag Size</TableCell>
+              <TableCell>GSM</TableCell>
               <TableCell>Quantity</TableCell>
-              <TableCell>Weight</TableCell>
-              <TableCell>QNT</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Print Colour</TableCell>
+              <TableCell>Fabric Colour</TableCell>
+              <TableCell>Fabric Quality</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -72,12 +81,13 @@ export default function ProductionTable({ type }) {
             {records.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{record.orderId}</TableCell>
-                <TableCell>{record.selendor_size}</TableCell>
-                <TableCell>{record.role_size}</TableCell>
+                <TableCell>{record.jobName || 'N/A'}</TableCell>
+                <TableCell>{record.bagSize || 'N/A'}</TableCell>
+                <TableCell>{record.gsm || 'N/A'}</TableCell>
                 <TableCell>{record.quantity}</TableCell>
-                <TableCell>{record.weight}</TableCell>
-                <TableCell>{record.qnt}</TableCell>
-                <TableCell>{record.status}</TableCell>
+                <TableCell>{record.printColour || 'N/A'}</TableCell>
+                <TableCell>{record.fabricColour || 'N/A'}</TableCell>
+                <TableCell>{record.fabricQuality || 'N/A'}</TableCell>
                 <TableCell>
                   <IconButton
                     color="primary"
@@ -99,6 +109,6 @@ export default function ProductionTable({ type }) {
         record={selectedRecord}
         type={type}
       />
-    </Box>
+  </Box>
   );
 }

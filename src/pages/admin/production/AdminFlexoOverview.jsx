@@ -1,9 +1,18 @@
 import { Grid } from '@mui/material';
 import SummaryCard from '../../../components/dashboard/SummaryCard';
 import FlexoOrderList from '../../production/components/FlexoOrderList';
-import { mockFlexoOrders } from '../../../data/mockData';
+import { useState } from 'react';
+import VerifyOrderDialog from '../../production/components/VerifyOrderDialog';
 
 export default function AdminFlexoOverview() {
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const handleVerify = (order) => {
+    setSelectedOrder(order);
+    setVerifyDialogOpen(true);
+  };
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={3}>
@@ -39,8 +48,17 @@ export default function AdminFlexoOverview() {
         />
       </Grid>
       <Grid item xs={12}>
-        <FlexoOrderList orders={mockFlexoOrders} adminView />
+        <FlexoOrderList 
+          status="pending"
+          onVerify={handleVerify}
+        />
       </Grid>
+
+      <VerifyOrderDialog
+        open={verifyDialogOpen}
+        onClose={() => setVerifyDialogOpen(false)}
+        order={selectedOrder}
+      />
     </Grid>
   );
 }

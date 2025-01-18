@@ -20,7 +20,7 @@ export default function OpsertOrderList({ status }) {
     const colors = {
       pending: 'warning',
       in_progress: 'info',
-      completed: 'success'
+      completed: 'success',
     };
     return colors[status] || 'default';
   };
@@ -37,33 +37,46 @@ export default function OpsertOrderList({ status }) {
     toast.success('Order moved to Delivery section');
   };
 
-  const filteredOrders = opsertOrders.filter(order => order.status === status);
+  const filteredOrders = opsertOrders.filter((order) => order.status === status);
 
   // Mobile card view
   const MobileOrderCard = ({ order }) => (
     <Card sx={{ mb: 2, p: 2 }}>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">Order ID</Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Order ID
+        </Typography>
         <Typography variant="body1">{order.order_id}</Typography>
       </Box>
 
       <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">Agent Name</Typography>
-        <Typography variant="body1">{order.agent_name}</Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Job Name
+        </Typography>
+        <Typography variant="body1">{order.job_name}</Typography>
       </Box>
 
       <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">Details</Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Details
+        </Typography>
         <Typography variant="body2">
-          Type: {order.bag_type}<br />
-          Size: {order.bag_size}<br />
-          Color: {order.bag_color}<br />
-          Print: {order.print_color}
+          Type: {order.bag_type}
+          <br />
+          Color: {order.bag_color}
+          <br />
+          Print Type: {order.print_type}
+          <br />
+          Print Color: {order.print_color}
+          <br />
+          Size: {order.bag_size}
         </Typography>
       </Box>
 
       <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">Status</Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Status
+        </Typography>
         <Chip
           label={order.status.replace('_', ' ').toUpperCase()}
           color={getStatusColor(order.status)}
@@ -128,12 +141,14 @@ export default function OpsertOrderList({ status }) {
             <TableHead>
               <TableRow>
                 <TableCell>Order ID</TableCell>
-                <TableCell>Agent Name</TableCell>
+                <TableCell>Job Name</TableCell>
                 <TableCell>Bag Type</TableCell>
-                <TableCell>Size</TableCell>
-                <TableCell>Colors</TableCell>
+                <TableCell>Bag Colour</TableCell>
                 <TableCell>Print Type</TableCell>
+                <TableCell>Print Colour</TableCell>
+                <TableCell>Bag Size</TableCell>
                 <TableCell>Quantity</TableCell>
+                <TableCell>Remarks</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -142,15 +157,14 @@ export default function OpsertOrderList({ status }) {
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>{order.order_id}</TableCell>
-                  <TableCell>{order.agent_name}</TableCell>
+                  <TableCell>{order.job_name}</TableCell>
                   <TableCell>{order.bag_type}</TableCell>
-                  <TableCell>{order.bag_size}</TableCell>
-                  <TableCell>
-                    Bag: {order.bag_color}<br />
-                    Print: {order.print_color}
-                  </TableCell>
+                  <TableCell>{order.bag_color}</TableCell>
                   <TableCell>{order.print_type}</TableCell>
+                  <TableCell>{order.print_color}</TableCell>
+                  <TableCell>{order.bag_size}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
+                  <TableCell>{order.remarks || 'N/A'}</TableCell>
                   <TableCell>
                     <Chip
                       label={order.status.replace('_', ' ').toUpperCase()}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { 
-  Box, 
+import {
+  Box,
   Container,
   AppBar,
   Toolbar,
@@ -16,7 +16,7 @@ import ReportCharts from './components/ReportCharts';
 import ReportFilters from './components/ReportFilters';
 import { bagMakingOrders } from '../../../data/bagMakingData';
 
-export default function BagMakingReportsPage() {
+export default function BagMakingReportsPage({ type }) {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
     dateRange: 'monthly',
@@ -28,38 +28,25 @@ export default function BagMakingReportsPage() {
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
-
+  const bagType = type === 'wcut' ? 'W-Cut' : 'D-Cut';
+  const basePath = `/production/${type}/bagmaking/dashboard`;
+  console.log('basePath', basePath);
   const handleBack = () => {
-    navigate('/production/bagmaking/dashboard');
+    const navigatePath = type ? basePath : '/production/bagmaking/dashboard';
+    navigate(navigatePath);
   };
 
   return (
     <Box sx={{ pb: 7 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={handleBack}
-            sx={{ mr: 2 }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h6" component="div">
-            Bag Making Reports
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="lg" sx={{ mt: 2 }}>
+      <Box sx={{ mt: 2, px: 3 }}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <ReportFilters 
-              filters={filters} 
-              onFilterChange={handleFilterChange} 
+            <ReportFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
             />
           </Grid>
-          
+
           <Grid item xs={12}>
             <ReportSummary records={bagMakingOrders} />
           </Grid>
@@ -72,7 +59,7 @@ export default function BagMakingReportsPage() {
             <ReportTable records={bagMakingOrders} />
           </Grid>
         </Grid>
-      </Container>
+      </Box>
     </Box>
   );
 }

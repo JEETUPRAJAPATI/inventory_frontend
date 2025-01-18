@@ -12,12 +12,9 @@ export const menuConfigs = {
 
   production_manager: [
     { title: 'Dashboard', path: '/production/manager/dashboard', icon: 'Dashboard' },
-    // { title: 'Flexo Production', path: '/production/manager/flexo/dashboard', icon: 'Engineering' },
     { title: 'W-Cut Production', path: '/production/manager/wcut/bagmaking/dashboard', icon: 'Engineering' },
     { title: 'D-Cut Production', path: '/production/manager/dcut/bagmaking/dashboard', icon: 'Engineering' },
-  //   { title: 'Opsert Production', path: '/production/manager/opsert/dashboard', icon: 'Engineering' },
-  //   { title: 'Reports', path: '/production/manager/reports', icon: 'Assessment' }
-   ],
+  ],
 
   production: {
     flexo_printing: [
@@ -30,11 +27,11 @@ export const menuConfigs = {
     ],
     w_cut_bagmaking: [
       { title: 'Dashboard', path: '/production/wcut/bagmaking/dashboard', icon: 'Dashboard' },
-      { title: 'Reports', path: '/production/bagmaking/reports', icon: 'Assessment' }
+      { title: 'Reports', path: '/production/wcut/bagmaking/reports', icon: 'Assessment' }
     ],
     d_cut_bagmaking: [
       { title: 'Dashboard', path: '/production/dcut/bagmaking/dashboard', icon: 'Dashboard' },
-      { title: 'Reports', path: '/production/bagmaking/reports', icon: 'Assessment' }
+      { title: 'Reports', path: '/production/dcut/bagmaking/reports', icon: 'Assessment' }
     ]
   },
 
@@ -55,7 +52,6 @@ export const menuConfigs = {
 
   delivery: [
     { title: 'Dashboard', path: '/delivery/dashboard', icon: 'Dashboard' },
-    { title: 'Deliveries', path: '/delivery/list', icon: 'LocalShipping' },
-    { title: 'Invoices', path: '/delivery/invoices', icon: 'Receipt' }
+    { title: 'Deliveries', path: '/delivery/list', icon: 'LocalShipping' }
   ]
 };

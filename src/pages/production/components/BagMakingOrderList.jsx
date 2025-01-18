@@ -9,18 +9,67 @@ import {
   Chip,
   Card,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Typography,
-  Divider,
 } from '@mui/material';
-import { Update, CheckCircle, LocalShipping, QrCodeScanner } from '@mui/icons-material';
+import { QrCodeScanner, Update, LocalShipping, Print, Receipt } from '@mui/icons-material';
 import toast from 'react-hot-toast';
-import { bagMakingOrders } from '../../../data/bagMakingData';
-import VerifyOrderDialog from './VerifyOrderDialog';
 import { useState } from 'react';
+import VerifyOrderDialog from './VerifyOrderDialog';
+
+// Mock data for testing
+const mockOrders = [
+  {
+    id: 'BAG-001',
+    order_id: 'ORD-001',
+    job_name: 'Premium D-Cut Bags',
+    bag_type: 'D-Cut',
+    fabric_type: 'Polyester',
+    gsm: '90',
+    fabric_color: 'Blue',
+    bag_size: '12x15x4',
+    quantity: 1000,
+    remarks: '', // Empty if no remarks
+    status: 'pending'
+  },
+  {
+    id: 'BAG-002',
+    order_id: 'ORD-002',
+    job_name: 'Eco D-Cut Bags',
+    bag_type: 'D-Cut',
+    fabric_type: 'Recycled Polyester',
+    gsm: '80',
+    fabric_color: 'Green',
+    bag_size: '10x12x3',
+    quantity: 2000,
+    remarks: 'Urgent delivery required',
+    status: 'in_progress'
+  },
+  {
+    id: 'BAG-003',
+    order_id: 'ORD-003',
+    job_name: 'Luxury D-Cut Bags',
+    bag_type: 'D-Cut',
+    fabric_type: 'Silk',
+    gsm: '100',
+    fabric_color: 'Black',
+    bag_size: '15x20x5',
+    quantity: 3000,
+    remarks: 'Luxury quality, high price',
+    status: 'completed',
+    billingStatus: 'pending'
+  }
+];
 
 export default function BagMakingOrderList({ status, bagType }) {
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orders, setOrders] = useState(mockOrders);
+  const [confirmBillingOpen, setConfirmBillingOpen] = useState(false);
+  const [orderToBill, setOrderToBill] = useState(null);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -31,85 +80,87 @@ export default function BagMakingOrderList({ status, bagType }) {
     return colors[status] || 'default';
   };
 
-  const handleUpdateStatus = (orderId) => {
-    toast.success('Order moved to Bag Making Process');
-  };
-
-  const handleCompleteOrder = (orderId) => {
-    toast.success('This bag making process has completed');
-  };
-
-  const handleMoveToDelivery = (orderId) => {
-    toast.success('Order moved to Packaging & Delivery section');
-  };
-
   const handleVerify = (order) => {
+    if (orders.some(o => o.status === 'in_progress') && order.status === 'pending') {
+      toast.error('A job is already active. Please complete or deactivate it before starting a new one.');
+      return;
+    }
     setSelectedOrder(order);
     setVerifyDialogOpen(true);
   };
 
-  const filteredOrders = bagMakingOrders.filter(order => order.status === status);
+  const handleVerifyComplete = (orderId, verifiedData) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId
+          ? { ...order, ...verifiedData, status: 'in_progress' }
+          : order
+      )
+    );
+    setVerifyDialogOpen(false);
+    setSelectedOrder(null);
+    toast.success('Order verified and marked as active');
+  };
 
-  // Mobile card view
-  const MobileOrderCard = ({ order }) => (
-    <Card sx={{ mb: 2, p: 2 }}>
-      {/* ... existing mobile card content ... */}
-      <Box sx={{ mt: 2 }}>
-        {order.status === 'pending' && (
-          <>
-            <Button
-              startIcon={<Update />}
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => handleUpdateStatus(order.id)}
-              sx={{ mb: 1 }}
-            >
-              Move to Bag Making Process
-            </Button>
-            {bagType === 'dcut' && (
-              <Button
-                startIcon={<QrCodeScanner />}
-                variant="outlined"
-                fullWidth
-                onClick={() => handleVerify(order)}
-                sx={{ mb: 1 }}
-              >
-                Verify Order
-              </Button>
-            )}
-          </>
-        )}
-        {/* ... existing buttons for other statuses ... */}
-      </Box>
-    </Card>
-  );
+  const handleStartProcess = (orderId) => {
+    if (orders.some(o => o.status === 'in_progress')) {
+      toast.error('A job is already active. Please complete it first.');
+      return;
+    }
+    toast.success('Process started successfully');
+  };
+
+  const handleCompleteOrder = (orderId) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId
+          ? { ...order, status: 'completed', billingStatus: 'pending' }
+          : order
+      )
+    );
+    toast.success('Order completed successfully');
+  };
+
+  const handleBillingClick = (order) => {
+    setOrderToBill(order);
+    setConfirmBillingOpen(true);
+  };
+
+  const handleConfirmBilling = () => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderToBill.id
+          ? { ...order, billingStatus: 'completed' }
+          : order
+      )
+    );
+    setConfirmBillingOpen(false);
+    setOrderToBill(null);
+    toast.success('Order moved to billing successfully');
+  };
+
+  const handleMoveToDelivery = (orderId) => {
+    toast.success('Order moved to Delivery Process');
+  };
+
+  const filteredOrders = orders.filter(order => order.status === status);
 
   return (
-    <Box>
-      {/* Mobile View */}
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        {filteredOrders.map((order) => (
-          <MobileOrderCard key={order.id} order={order} />
-        ))}
-      </Box>
-
-      {/* Desktop View */}
-      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-        <TableContainer component={Card}>
+    <>
+      <Card>
+        <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Role Size</TableCell>
                 <TableCell>Order ID</TableCell>
                 <TableCell>Job Name</TableCell>
                 <TableCell>Bag Type</TableCell>
-                <TableCell>Bag Color</TableCell>
-                <TableCell>Bag Size</TableCell>
+                <TableCell>Fabric Type</TableCell>
                 <TableCell>GSM</TableCell>
+                <TableCell>Fabric Color</TableCell>
+                <TableCell>Bag Size</TableCell>
                 <TableCell>Quantity</TableCell>
-                <TableCell>Weight</TableCell>
-                <TableCell>QNT</TableCell>
+                <TableCell>Remarks</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -117,16 +168,15 @@ export default function BagMakingOrderList({ status, bagType }) {
             <TableBody>
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell>{order.role_size}</TableCell>
                   <TableCell>{order.order_id}</TableCell>
                   <TableCell>{order.job_name}</TableCell>
                   <TableCell>{order.bag_type}</TableCell>
-                  <TableCell>{order.bag_color}</TableCell>
-                  <TableCell>{order.bag_size}</TableCell>
+                  <TableCell>{order.fabric_type || '-'}</TableCell>
                   <TableCell>{order.gsm}</TableCell>
+                  <TableCell>{order.fabric_color}</TableCell>
+                  <TableCell>{order.bag_size}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
-                  <TableCell>{order.weight}</TableCell>
-                  <TableCell>{order.qnt}</TableCell>
+                  <TableCell>{order.remarks || '-'}</TableCell>
                   <TableCell>
                     <Chip
                       label={order.status.replace('_', ' ').toUpperCase()}
@@ -138,46 +188,56 @@ export default function BagMakingOrderList({ status, bagType }) {
                     {order.status === 'pending' && (
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button
-                          startIcon={<Update />}
+                          startIcon={<Print />}
                           variant="contained"
+                          color="primary"
                           size="small"
-                          onClick={() => handleUpdateStatus(order.id)}
+                          onClick={() => handleStartProcess(order.id)}
                         >
-                          Move to Bag Making Process
+                          Start Process
                         </Button>
-                        {bagType === 'dcut' && (
-                          <Button
-                            startIcon={<QrCodeScanner />}
-                            variant="outlined"
-                            size="small"
-                            onClick={() => handleVerify(order)}
-                          >
-                            Verify
-                          </Button>
-                        )}
+                        <Button
+                          startIcon={<QrCodeScanner />}
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleVerify(order)}
+                        >
+                          Verify
+                        </Button>
                       </Box>
                     )}
                     {order.status === 'in_progress' && (
                       <Button
-                        startIcon={<CheckCircle />}
+                        startIcon={<Update />}
                         variant="contained"
                         color="success"
                         size="small"
                         onClick={() => handleCompleteOrder(order.id)}
                       >
-                        Work Completed
+                        Complete
                       </Button>
                     )}
                     {order.status === 'completed' && (
-                      <Button
-                        startIcon={<LocalShipping />}
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => handleMoveToDelivery(order.id)}
-                      >
-                        Move to Delivery Section
-                      </Button>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                          startIcon={<Receipt />}
+                          variant="contained"
+                          color="secondary"
+                          size="small"
+                          onClick={() => handleBillingClick(order)}
+                        >
+                          Direct Billing
+                        </Button>
+                        <Button
+                          startIcon={<LocalShipping />}
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={() => handleMoveToDelivery(order.id)}
+                        >
+                          Move to Delivery
+                        </Button>
+                      </Box>
                     )}
                   </TableCell>
                 </TableRow>
@@ -185,13 +245,40 @@ export default function BagMakingOrderList({ status, bagType }) {
             </TableBody>
           </Table>
         </TableContainer>
-      </Box>
+      </Card>
 
       <VerifyOrderDialog
         open={verifyDialogOpen}
         onClose={() => setVerifyDialogOpen(false)}
         order={selectedOrder}
+        onVerifyComplete={handleVerifyComplete}
       />
-    </Box>
+
+      <Dialog
+        open={confirmBillingOpen}
+        onClose={() => setConfirmBillingOpen(false)}
+      >
+        <DialogTitle>Confirm Direct Billing</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to move this order to billing?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Order ID: {orderToBill?.order_id}<br />
+            Job Name: {orderToBill?.job_name}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmBillingOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleConfirmBilling}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

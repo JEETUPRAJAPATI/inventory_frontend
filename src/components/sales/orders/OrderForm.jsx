@@ -29,8 +29,8 @@ const initialFormData = {
 };
 
 const bagTypes = [
-  { value: 'loop handle', label: 'Loop Handle' },
-  { value: 'box bag', label: 'Box Bag' },
+  { value: 'loop handle', label: 'Loop Handle (D-cut)' },
+  { value: 'box bag', label: 'Box Bag (W-cut)' },
 ];
 
 const orderStatuses = [

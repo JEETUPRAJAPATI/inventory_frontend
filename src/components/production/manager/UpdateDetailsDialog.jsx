@@ -12,21 +12,21 @@ import toast from 'react-hot-toast';
 
 export default function UpdateDetailsDialog({ open, onClose, record, type }) {
   const [formData, setFormData] = useState({
-    selendor_size: '',
-    role_size: '',
-    quantity: '',
-    weight: '',
-    qnt: ''
+    roll_size: '',
+    cylinder_size: '',
+    quantity_kgs: '',
+    quantity_rolls: '',
+    remarks: '',
   });
 
   useEffect(() => {
     if (record) {
       setFormData({
-        selendor_size: record.selendor_size,
-        role_size: record.role_size,
-        quantity: record.quantity,
-        weight: record.weight,
-        qnt: record.qnt
+        roll_size: record.roll_size || '',
+        cylinder_size: record.cylinder_size || '',
+        quantity_kgs: record.quantity_kgs || '',
+        quantity_rolls: record.quantity_rolls || '',
+        remarks: record.remarks || '',
       });
     }
   }, [record]);
@@ -55,9 +55,9 @@ export default function UpdateDetailsDialog({ open, onClose, record, type }) {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Selendor Size"
-                name="selendor_size"
-                value={formData.selendor_size}
+                label="Roll Size"
+                name="roll_size"
+                value={formData.roll_size}
                 onChange={handleChange}
                 required
               />
@@ -65,9 +65,9 @@ export default function UpdateDetailsDialog({ open, onClose, record, type }) {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Role Size"
-                name="role_size"
-                value={formData.role_size}
+                label="Cylinder Size"
+                name="cylinder_size"
+                value={formData.cylinder_size}
                 onChange={handleChange}
                 required
               />
@@ -75,10 +75,10 @@ export default function UpdateDetailsDialog({ open, onClose, record, type }) {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Quantity"
-                name="quantity"
+                label="Quantity (in Kgs)"
+                name="quantity_kgs"
                 type="number"
-                value={formData.quantity}
+                value={formData.quantity_kgs}
                 onChange={handleChange}
                 required
               />
@@ -86,23 +86,23 @@ export default function UpdateDetailsDialog({ open, onClose, record, type }) {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Weight"
-                name="weight"
+                label="Quantity (in Number of Rolls)"
+                name="quantity_rolls"
                 type="number"
-                value={formData.weight}
+                value={formData.quantity_rolls}
                 onChange={handleChange}
                 required
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="QNT"
-                name="qnt"
-                type="number"
-                value={formData.qnt}
+                label="Remarks (if Any)"
+                name="remarks"
+                value={formData.remarks}
                 onChange={handleChange}
-                required
+                multiline
+                rows={3}
               />
             </Grid>
           </Grid>

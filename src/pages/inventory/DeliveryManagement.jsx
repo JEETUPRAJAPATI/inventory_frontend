@@ -24,19 +24,21 @@ const mockDeliveries = [
   {
     id: 'DEL-001',
     orderId: 'ORD-001',
-    customerName: 'John Doe',
-    vehicleNo: '',
-    driverName: '',
-    driverContact: '',
+    agentName: 'John Doe',
+    customerName: 'Jane Smith',
+    address: '123 Main St, City, Country',
+    mobileNo: '+1234567890',
+    deliveryDate: '2024-02-20',
     status: 'pending'
   },
   {
     id: 'DEL-002',
     orderId: 'ORD-002',
-    customerName: 'Jane Smith',
-    vehicleNo: 'MH-12-AB-1234',
-    driverName: 'Mike Johnson',
-    driverContact: '+1234567890',
+    agentName: 'Sarah Wilson',
+    customerName: 'John Doe',
+    address: '456 Elm St, City, Country',
+    mobileNo: '+0987654321',
+    deliveryDate: '2024-02-21',
     status: 'assigned'
   }
 ];
@@ -46,7 +48,10 @@ export default function DeliveryManagement() {
   const [deliveryDetails, setDeliveryDetails] = useState({
     vehicleNo: '',
     driverName: '',
-    driverContact: ''
+    driverContact: '',
+    address: '',
+    mobileNo: '',
+    deliveryDate: ''
   });
 
   const handleEdit = (delivery) => {
@@ -54,7 +59,10 @@ export default function DeliveryManagement() {
     setDeliveryDetails({
       vehicleNo: delivery.vehicleNo,
       driverName: delivery.driverName,
-      driverContact: delivery.driverContact
+      driverContact: delivery.driverContact,
+      address: delivery.address,
+      mobileNo: delivery.mobileNo,
+      deliveryDate: delivery.deliveryDate
     });
   };
 
@@ -82,10 +90,11 @@ export default function DeliveryManagement() {
                 <TableRow>
                   <TableCell>Delivery ID</TableCell>
                   <TableCell>Order ID</TableCell>
+                  <TableCell>Agent Name</TableCell>
                   <TableCell>Customer</TableCell>
-                  <TableCell>Vehicle No</TableCell>
-                  <TableCell>Driver Name</TableCell>
-                  <TableCell>Driver Contact</TableCell>
+                  <TableCell>Address</TableCell>
+                  <TableCell>Mobile No.</TableCell>
+                  <TableCell>Delivery Date</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
@@ -95,10 +104,11 @@ export default function DeliveryManagement() {
                   <TableRow key={delivery.id}>
                     <TableCell>{delivery.id}</TableCell>
                     <TableCell>{delivery.orderId}</TableCell>
+                    <TableCell>{delivery.agentName}</TableCell>
                     <TableCell>{delivery.customerName}</TableCell>
-                    <TableCell>{delivery.vehicleNo || '-'}</TableCell>
-                    <TableCell>{delivery.driverName || '-'}</TableCell>
-                    <TableCell>{delivery.driverContact || '-'}</TableCell>
+                    <TableCell>{delivery.address}</TableCell>
+                    <TableCell>{delivery.mobileNo}</TableCell>
+                    <TableCell>{delivery.deliveryDate}</TableCell>
                     <TableCell>
                       <Chip
                         label={delivery.status.toUpperCase()}
@@ -155,6 +165,40 @@ export default function DeliveryManagement() {
                 onChange={handleChange}
                 fullWidth
                 required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Customer Address"
+                name="address"
+                value={deliveryDetails.address}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Customer Mobile No."
+                name="mobileNo"
+                value={deliveryDetails.mobileNo}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Delivery Date"
+                name="deliveryDate"
+                type="date"
+                value={deliveryDetails.deliveryDate}
+                onChange={handleChange}
+                fullWidth
+                required
+                InputLabelProps={{
+                  shrink: true
+                }}
               />
             </Grid>
           </Grid>

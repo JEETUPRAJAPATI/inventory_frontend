@@ -23,7 +23,7 @@ const dummyQRData = {
   cylinderSize: '30x40'
 };
 
-export default function VerifyOrderDialog({ open, onClose, order, onVerifyComplete }) {
+export default function VerifyOrderDialog({ open, onClose, order }) {
   const [scanning, setScanning] = useState(false);
   const [scannedData, setScannedData] = useState(null);
 
@@ -37,16 +37,10 @@ export default function VerifyOrderDialog({ open, onClose, order, onVerifyComple
         toast.success('QR Code scanned successfully');
         setScanning(false);
       } catch (error) {
-        toast.error('Invalid QR Code. Please try again.');
+        toast.error('Failed to scan QR Code');
         setScanning(false);
       }
     }, 1500);
-  };
-
-  const handleConfirm = () => {
-    if (scannedData) {
-      onVerifyComplete(order.id, scannedData);
-    }
   };
 
   const handleClose = () => {
@@ -76,8 +70,8 @@ export default function VerifyOrderDialog({ open, onClose, order, onVerifyComple
                 Quantity: {order.quantity}
               </Typography>
             </Box>
-
-            {/* <Typography variant="subtitle2" gutterBottom>
+{/*
+            <Typography variant="subtitle2" gutterBottom>
               Scan QR Code
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
@@ -90,61 +84,73 @@ export default function VerifyOrderDialog({ open, onClose, order, onVerifyComple
 
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle2" gutterBottom>
-              Scanned Details
+              Production Details
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Roll Size"
-                  value={scannedData?.rollSize || ''}
+                  value={scannedData?.rollSize || order.rollSize || ''}
                   disabled
-                  sx={{ backgroundColor: scannedData?.rollSize ? '#e8f5e9' : 'inherit' }}
+                  sx={{
+                    backgroundColor: scannedData?.rollSize ? '#e8f5e9' : 'inherit'
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="GSM"
-                  value={scannedData?.gsm || ''}
+                  value={scannedData?.gsm || order.gsm || ''}
                   disabled
-                  sx={{ backgroundColor: scannedData?.gsm ? '#e8f5e9' : 'inherit' }}
+                  sx={{
+                    backgroundColor: scannedData?.gsm ? '#e8f5e9' : 'inherit'
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Fabric Color"
-                  value={scannedData?.fabricColor || ''}
+                  value={scannedData?.fabricColor || order.fabricColor || ''}
                   disabled
-                  sx={{ backgroundColor: scannedData?.fabricColor ? '#e8f5e9' : 'inherit' }}
+                  sx={{
+                    backgroundColor: scannedData?.fabricColor ? '#e8f5e9' : 'inherit'
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Bag Type"
-                  value={scannedData?.bagType || ''}
+                  value={scannedData?.bagType || order.bagType || ''}
                   disabled
-                  sx={{ backgroundColor: scannedData?.bagType ? '#e8f5e9' : 'inherit' }}
+                  sx={{
+                    backgroundColor: scannedData?.bagType ? '#e8f5e9' : 'inherit'
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Print Color"
-                  value={scannedData?.printColor || ''}
+                  value={scannedData?.printColor || order.printColor || ''}
                   disabled
-                  sx={{ backgroundColor: scannedData?.printColor ? '#e8f5e9' : 'inherit' }}
+                  sx={{
+                    backgroundColor: scannedData?.printColor ? '#e8f5e9' : 'inherit'
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Cylinder Size"
-                  value={scannedData?.cylinderSize || ''}
+                  value={scannedData?.cylinderSize || order.cylinderSize || ''}
                   disabled
-                  sx={{ backgroundColor: scannedData?.cylinderSize ? '#e8f5e9' : 'inherit' }}
+                  sx={{
+                    backgroundColor: scannedData?.cylinderSize ? '#e8f5e9' : 'inherit'
+                  }}
                 />
               </Grid>
             </Grid>
@@ -164,9 +170,12 @@ export default function VerifyOrderDialog({ open, onClose, order, onVerifyComple
           <Button
             variant="contained"
             color="success"
-            onClick={handleConfirm}
+            onClick={() => {
+              toast.success('Order details verified and saved');
+              handleClose();
+            }}
           >
-            Confirm & Start Job
+            Confirm & Save
           </Button>
         )}
       </DialogActions>

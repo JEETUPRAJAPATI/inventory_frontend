@@ -3,64 +3,69 @@ import 'jspdf-autotable';
 
 export const generateInvoicePDF = (invoiceData) => {
   try {
+    // Create new PDF document
     const doc = new jsPDF();
     
-    // Add company header
+    // Company Header
     doc.setFontSize(24);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('COMPANY NAME', 105, 20, { align: 'center' });
+    
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('123 Business Street, City, State, ZIP', 105, 27, { align: 'center' });
-    doc.text('Phone: (123) 456-7890 | Email: info@company.com', 105, 32, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('123 Business Street, City, State, ZIP', 105, 30, { align: 'center' });
+    doc.text('Phone: (123) 456-7890 | Email: info@company.com', 105, 35, { align: 'center' });
 
-    // Add invoice title
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('INVOICE', 105, 45, { align: 'center' });
-    
-    // Add invoice details
+    // Invoice Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE', 105, 50, { align: 'center' });
+
+    // Invoice Details
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('Invoice Number:', 20, 60);
-    doc.text(invoiceData.invoiceNumber, 80, 60);
-    
-    doc.text('Date:', 20, 67);
-    doc.text(invoiceData.date, 80, 67);
-    
-    doc.text('Due Date:', 20, 74);
-    doc.text(invoiceData.dueDate, 80, 74);
+    doc.setFont('helvetica', 'normal');
 
-    // Add customer details
-    doc.setFont(undefined, 'bold');
-    doc.text('BILL TO:', 20, 90);
-    doc.setFont(undefined, 'normal');
+    // Left side - Bill To
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bill To:', 20, 70);
+    doc.setFont('helvetica', 'normal');
     doc.text([
-      invoiceData.customerName,
-      invoiceData.address || '',
-      `Phone: ${invoiceData.phone || 'N/A'}`,
-      `Email: ${invoiceData.email || 'N/A'}`
-    ], 20, 97);
+      'Customer Name: John Doe',
+      'Address: 123 Main St',
+      'City, State 12345',
+      'Phone: +1234567890',
+      'Email: john@example.com'
+    ], 20, 80);
 
-    // Add GST details
-    doc.text(`GST Number: ${invoiceData.gstNumber}`, 20, 125);
+    // Right side - Invoice Info
+    doc.text([
+      'Invoice No: INV-001',
+      'Date: 2024-02-25',
+      'Due Date: 2024-03-25',
+      'GST No: GST12345678'
+    ], 120, 80);
 
-    // Add order details table
-    const tableData = [[
-      invoiceData.jobName,
-      invoiceData.quantity,
-      `₹${invoiceData.unitPrice.toFixed(2)}`,
-      `₹${invoiceData.subtotal.toFixed(2)}`
-    ]];
+    // Add Items Table
+    const tableColumns = [
+      'Description',
+      'Quantity',
+      'Unit Price',
+      'Amount'
+    ];
+
+    const tableData = [
+      ['Premium Shopping Bags', '1000', '₹15.00', '₹15,000.00'],
+      ['Eco Friendly Bags', '500', '₹12.00', '₹6,000.00']
+    ];
 
     doc.autoTable({
-      startY: 135,
-      head: [['Description', 'Quantity', 'Unit Price', 'Amount']],
+      startY: 120,
+      head: [tableColumns],
       body: tableData,
       theme: 'grid',
       headStyles: {
-        fillColor: [66, 66, 66],
-        textColor: [255, 255, 255],
+        fillColor: [41, 128, 185],
+        textColor: 255,
         fontSize: 10,
         fontStyle: 'bold',
         halign: 'center'
@@ -71,29 +76,30 @@ export const generateInvoicePDF = (invoiceData) => {
       }
     });
 
-    // Add totals
+    // Add Totals
     const finalY = doc.lastAutoTable.finalY + 10;
-    doc.text('Subtotal:', 140, finalY);
-    doc.text(`₹${invoiceData.subtotal.toFixed(2)}`, 180, finalY, { align: 'right' });
-    
-    doc.text('GST (18%):', 140, finalY + 7);
-    doc.text(`₹${invoiceData.gst.toFixed(2)}`, 180, finalY + 7, { align: 'right' });
-    
-    doc.setFont(undefined, 'bold');
-    doc.text('Total:', 140, finalY + 14);
-    doc.text(`₹${invoiceData.total.toFixed(2)}`, 180, finalY + 14, { align: 'right' });
 
-    // Add footer
-    doc.setFont(undefined, 'normal');
+    doc.text('Subtotal:', 120, finalY + 10);
+    doc.text('₹21,000.00', 170, finalY + 10);
+
+    doc.text('GST (18%):', 120, finalY + 20);
+    doc.text('₹3,780.00', 170, finalY + 20);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total:', 120, finalY + 30);
+    doc.text('₹24,780.00', 170, finalY + 30);
+
+    // Add Footer
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text('Thank you for your business!', 105, 270, { align: 'center' });
-    doc.text('Terms & Conditions Apply', 105, 275, { align: 'center' });
+    doc.text('Thank you for your business!', 105, 250, { align: 'center' });
+    doc.text('Terms & Conditions Apply', 105, 255, { align: 'center' });
 
     // Save the PDF
-    doc.save(`Invoice-${invoiceData.invoiceNumber}.pdf`);
+    doc.save('invoice.pdf');
     return true;
   } catch (error) {
     console.error('Error generating PDF:', error);
-    throw error;
+    throw new Error('Failed to generate PDF');
   }
-};
+}

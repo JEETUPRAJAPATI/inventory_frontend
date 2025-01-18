@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { 
-  Box, 
-  Card, 
-  Button, 
+import {
+  Box,
+  Card,
+  Button,
   Typography,
   AppBar,
   Toolbar,
@@ -12,10 +12,10 @@ import {
   Container,
   Divider
 } from '@mui/material';
-import { 
-  Assessment, 
-  ExitToApp, 
-  Brightness4, 
+import {
+  Assessment,
+  ExitToApp,
+  Brightness4,
   Brightness7,
   Dashboard
 } from '@mui/icons-material';
@@ -33,21 +33,7 @@ export default function OpsertDashboard() {
 
   return (
     <Box sx={{ pb: 7 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            D-Cut Loop Handle PRODUCTION Dashboard
-          </Typography>
-          <IconButton color="inherit" onClick={toggleColorMode}>
-            {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
-          </IconButton>
-          <IconButton color="inherit" onClick={logout}>
-            <ExitToApp />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="lg" sx={{ mt: 2 }}>
+      <Box sx={{ mt: 2 }}>
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={6}>
             <Button
@@ -110,9 +96,8 @@ export default function OpsertDashboard() {
             </Grid>
           </Box>
         </Card>
-
         <OpsertOrderList status={activeStatus} />
-      </Container>
+      </Box>
     </Box>
   );
 }

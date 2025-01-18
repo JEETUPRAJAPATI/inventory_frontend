@@ -1,0 +1,32 @@
+1.inventory
+	Email: inventory@example.com
+	Password :12345678
+2.Sales
+	Email: sales@example.com
+	Password : Sales@1234
+3.Production
+	1.Production manager
+		Email: production@example.com
+		Password:  12345678
+	2.W-cut
+		1.Flexo
+			Email: flexo@example.com
+			Password:  flexo@123
+		2.bag making
+			Email : wcutBagMaking@example.com
+			Passowrd:12345678
+	3.D-cut
+		1.BagMaking
+			Email : dcutBagMaking@example.com
+			Password : 12345678
+		3.Opsert
+			Email: Opsert@example.com
+			Password: Opsert@123
+4.Delivery
+	Email :delivery@example.com
+	Password:  Delivery@1234
+5.Admin
+	Email : admin@gmail.com
+	Passowrd: admin@123
+
+

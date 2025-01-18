@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { 
-  Grid, 
-  AppBar, 
-  Toolbar, 
-  Typography, 
+import {
+  Grid,
+  AppBar,
+  Toolbar,
+  Typography,
   IconButton,
   Box,
   Container
@@ -42,28 +42,14 @@ export default function FlexoReportsPage() {
   return (
     <Box sx={{ pb: 7 }}>
       {/* Mobile App Bar with Back Button */}
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={handleBack}
-            sx={{ mr: 2 }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h6" component="div">
-            Flexo Reports
-          </Typography>
-        </Toolbar>
-      </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 2 }}>
+
+      <Box>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <ReportFilters filters={filters} onFilterChange={handleFilterChange} />
           </Grid>
-          
+
           <Grid item xs={12}>
             <ReportSummary records={filteredRecords} />
           </Grid>
@@ -76,7 +62,7 @@ export default function FlexoReportsPage() {
             <ReportTable records={filteredRecords} />
           </Grid>
         </Grid>
-      </Container>
+      </Box>
     </Box>
   );
 }

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { 
-  Box, 
-  Card, 
-  Button, 
+import {
+  Box,
+  Card,
+  Button,
   Typography,
   AppBar,
   Toolbar,
@@ -12,10 +12,10 @@ import {
   Container,
   Divider
 } from '@mui/material';
-import { 
-  Assessment, 
-  ExitToApp, 
-  Brightness4, 
+import {
+  Assessment,
+  ExitToApp,
+  Brightness4,
   Brightness7,
   Dashboard
 } from '@mui/icons-material';
@@ -23,8 +23,6 @@ import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../contexts/ColorModeContext';
 import { useAuth } from '../../hooks/useAuth';
 import FlexoOrderList from './components/FlexoOrderList';
-import VerifyOrderDialog from './components/VerifyOrderDialog';
-import { mockFlexoOrders } from '../../data/mockData';
 
 export default function FlexoDashboard() {
   const navigate = useNavigate();
@@ -32,33 +30,12 @@ export default function FlexoDashboard() {
   const { toggleColorMode } = useColorMode();
   const { logout } = useAuth();
   const [activeStatus, setActiveStatus] = useState('pending');
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-
-  const handleVerify = (order) => {
-    setSelectedOrder(order);
-    setVerifyDialogOpen(true);
-  };
-
-  const filteredOrders = mockFlexoOrders.filter(order => order.status === activeStatus);
 
   return (
     <Box sx={{ pb: 7 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            W-Cut Box Bag PRODUCTION Dashboard
-          </Typography>
-          <IconButton color="inherit" onClick={toggleColorMode}>
-            {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
-          </IconButton>
-          <IconButton color="inherit" onClick={logout}>
-            <ExitToApp />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 2 }}>
+
+      <Box>
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={6}>
             <Button
@@ -122,17 +99,8 @@ export default function FlexoDashboard() {
           </Box>
         </Card>
 
-        <FlexoOrderList 
-          orders={filteredOrders}
-          onVerify={handleVerify}
-        />
-      </Container>
-
-      <VerifyOrderDialog
-        open={verifyDialogOpen}
-        onClose={() => setVerifyDialogOpen(false)}
-        order={selectedOrder}
-      />
+        <FlexoOrderList status={activeStatus} />
+      </Box>
     </Box>
   );
 }

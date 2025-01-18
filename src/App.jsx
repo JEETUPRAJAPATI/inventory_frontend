@@ -4,7 +4,6 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminRoutes from './pages/admin/AdminRoutes';
 import RegisterForm from './components/RegisterForm';
 import LoginForm from './components/LoginForm';
-import LandingPage from './pages/LandingPage';
 import Unauthorized from './pages/Unauthorized';
 import PrivateRoute from './components/PrivateRoute';
 import ManagerDashboard from './pages/production/manager/ManagerDashboard';
@@ -34,14 +33,13 @@ import InvoiceManagement from './pages/inventory/InvoiceManagement';
 // Delivery pages
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 import DeliveryList from './pages/delivery/DeliveryList';
-import InvoiceList from './pages/delivery/InvoiceList';
 
 export default function App() {
   return (
     <>
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
@@ -84,7 +82,6 @@ export default function App() {
             </PrivateRoute>
           }
         />
-
         {/* Production Routes */}
         <Route
           path="/production/*"
@@ -97,8 +94,9 @@ export default function App() {
                   <Route path="opsert/dashboard" element={<OpsertDashboard />} />
                   <Route path="opsert/reports" element={<OpsertReportsPage />} />
                   <Route path="wcut/bagmaking/dashboard" element={<BagMakingDashboard type="wcut" />} />
+                  <Route path="wcut/bagmaking/reports" element={<BagMakingReportsPage type="wcut" />} />
                   <Route path="dcut/bagmaking/dashboard" element={<BagMakingDashboard type="dcut" />} />
-                  <Route path="bagmaking/reports" element={<BagMakingReportsPage />} />
+                  <Route path="dcut/bagmaking/reports" element={<BagMakingReportsPage type="dcut" />} />
                 </Routes>
               </AdminLayout>
             </PrivateRoute>
@@ -134,7 +132,6 @@ export default function App() {
                 <Routes>
                   <Route path="dashboard" element={<DeliveryDashboard />} />
                   <Route path="list" element={<DeliveryList />} />
-                  <Route path="invoices" element={<InvoiceList />} />
                 </Routes>
               </AdminLayout>
             </PrivateRoute>
