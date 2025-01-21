@@ -34,7 +34,7 @@ export default function SalesOrderList() {
 
   const filteredOrders = salesOrders.filter(order => {
     const matchesSearch = order.customerName.toLowerCase().includes(filters.search.toLowerCase()) ||
-                         order.id.toLowerCase().includes(filters.search.toLowerCase());
+      order.id.toLowerCase().includes(filters.search.toLowerCase());
     const matchesStatus = filters.status === 'all' || order.status === filters.status;
     const matchesType = filters.type === 'all' || order.bagType === filters.type;
 
