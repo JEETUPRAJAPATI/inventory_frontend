@@ -1,71 +1,173 @@
-import { useState, useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
-import DeliveryStatusTabs from './DeliveryStatusTabs';
-import DeliveryTable from './DeliveryTable';
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Typography,
+  Chip,
+  Box,
+  Button,
+} from '@mui/material';
+import { Visibility, CheckCircle, Cancel } from '@mui/icons-material';
+import DeliveryDetailsModal from './DeliveryDetailsModal';
+import DeliveryFilters from './DeliveryFilters';
 import toast from 'react-hot-toast';
-
-// Mock data - replace with actual API call
-const mockDeliveries = [
-  {
-    id: 'DEL001',
-    orderId: 'ORD-001',
-    customerName: 'John Doe',
-    address: '123 Main St, City',
-    deliveryDate: '2024-02-25',
-    status: 'pending',
-    contact: '+1234567890'
-  },
-  {
-    id: 'DEL002',
-    orderId: 'ORD-002',
-    customerName: 'Jane Smith',
-    address: '456 Oak Ave, Town',
-    deliveryDate: '2024-02-26',
-    status: 'in_transit',
-    contact: '+0987654321'
-  },
-  {
-    id: 'DEL003',
-    orderId: 'ORD-003',
-    customerName: 'Mike Johnson',
-    address: '789 Pine St, Village',
-    deliveryDate: '2024-02-24',
-    status: 'delivered',
-    contact: '+1122334455'
-  }
-];
+import deliveryService from '../../services/deliveryService';
 
 export default function DeliveryList() {
-  const [activeStatus, setActiveStatus] = useState('pending');
+  const [deliveries, setDeliveries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [filters, setFilters] = useState({
+    status: '',
+    timeRange: 'month',
+    page: 1,
+    limit: 10
+  });
 
-  const filteredDeliveries = useMemo(() => {
-    if (activeStatus === 'pending') {
-      return mockDeliveries.filter(d => ['pending', 'in_transit'].includes(d.status));
+  const fetchDeliveries = async () => {
+    try {
+      setLoading(true);
+      const response = await deliveryService.getDeliveries(filters);
+      setDeliveries(response.data);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
-    return mockDeliveries.filter(d => d.status === 'delivered');
-  }, [activeStatus]);
+  };
 
-  const handleStatusUpdate = (deliveryId, newStatus) => {
-    // Replace with actual API call
-    toast.success(`Delivery ${deliveryId} status updated to ${newStatus}`);
+  useEffect(() => {
+    fetchDeliveries();
+  }, [filters]);
+
+  const handleView = async (deliveryId) => {
+    try {
+      const delivery = await deliveryService.getDeliveryById(deliveryId);
+      setSelectedDelivery(delivery);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleStatusUpdate = async (deliveryId, newStatus) => {
+    try {
+      await deliveryService.updateDeliveryStatus(deliveryId, newStatus);
+      toast.success(`Delivery status updated to ${newStatus}`);
+      fetchDeliveries();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'Pending': 'warning',
+      'In Transit': 'info',
+      'Delivered': 'success'
+    };
+    return colors[status] || 'default';
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Delivery Management
-      </Typography>
-      
-      <DeliveryStatusTabs
-        activeStatus={activeStatus}
-        onStatusChange={setActiveStatus}
+    <>
+      <Card>
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" gutterBottom>Delivery Management</Typography>
+          <DeliveryFilters
+            filters={filters}
+            onFilterChange={setFilters}
+          />
+        </Box>
+
+        <TableContainer>
+          {loading ? (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography>Loading...</Typography>
+            </Box>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Customer</TableCell>
+                  <TableCell>Contact</TableCell>
+                  <TableCell>Delivery Date</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {deliveries.map((delivery) => (
+                  <TableRow key={delivery._id}>
+                    <TableCell>{delivery.customer}</TableCell>
+                    <TableCell>{delivery.contact}</TableCell>
+                    <TableCell>
+                      {new Date(delivery.delivery_date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={delivery.status}
+                        color={getStatusColor(delivery.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => handleView(delivery._id)}
+                      >
+                        <Visibility />
+                      </IconButton>
+
+                      {delivery.status === 'Pending' && (
+                        <>
+                          <IconButton
+                            size="small"
+                            color="success"
+                            onClick={() => handleStatusUpdate(delivery._id, 'In Transit')}
+                          >
+                            <CheckCircle />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleStatusUpdate(delivery._id, 'Cancelled')}
+                          >
+                            <Cancel />
+                          </IconButton>
+                        </>
+                      )}
+
+                      {delivery.status === 'In Transit' && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          onClick={() => handleStatusUpdate(delivery._id, 'Delivered')}
+                        >
+                          Mark Delivered
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </TableContainer>
+      </Card>
+
+      <DeliveryDetailsModal
+        open={!!selectedDelivery}
+        delivery={selectedDelivery}
+        onClose={() => setSelectedDelivery(null)}
       />
-      
-      <DeliveryTable
-        deliveries={filteredDeliveries}
-        onStatusUpdate={handleStatusUpdate}
-        viewOnly={true} // Delivery users can only view and update status
-      />
-    </Box>
+    </>
   );
 }

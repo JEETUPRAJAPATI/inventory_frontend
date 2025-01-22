@@ -3,7 +3,11 @@ import { Box, TextField, MenuItem } from '@mui/material';
 export default function DeliveryFilters({ filters, onFilterChange }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
-    onFilterChange({ ...filters, [name]: value });
+    onFilterChange(prev => ({
+      ...prev,
+      [name]: value,
+      page: 1 // Reset page when filters change
+    }));
   };
 
   return (
@@ -17,22 +21,20 @@ export default function DeliveryFilters({ filters, onFilterChange }) {
         onChange={handleChange}
         sx={{ minWidth: 120 }}
       >
-        <MenuItem value="all">All Status</MenuItem>
-        <MenuItem value="pending">Pending</MenuItem>
-        <MenuItem value="in_transit">In Transit</MenuItem>
-        <MenuItem value="delivered">Delivered</MenuItem>
+        <MenuItem value="Pending">Pending</MenuItem>
+        <MenuItem value="In Transit">In Transit</MenuItem>
+        <MenuItem value="Delivered">Delivered</MenuItem>
       </TextField>
 
       <TextField
         select
         size="small"
-        name="dateRange"
-        label="Date Range"
-        value={filters.dateRange}
+        name="timeRange"
+        label="Time Range"
+        value={filters.timeRange}
         onChange={handleChange}
         sx={{ minWidth: 120 }}
       >
-        <MenuItem value="all">All Time</MenuItem>
         <MenuItem value="today">Today</MenuItem>
         <MenuItem value="week">This Week</MenuItem>
         <MenuItem value="month">This Month</MenuItem>
