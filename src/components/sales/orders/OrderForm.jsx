@@ -34,8 +34,8 @@ const initialFormData = {
 };
 
 const bagTypes = [
-  { value: 'loop handle', label: 'Loop Handle (D-cut)' },
-  { value: 'box bag', label: 'Box Bag (W-cut)' },
+  { value: 'd_cut_loop_handle', label: 'Loop Handle (D-cut)' },
+  { value: 'w_cut_box_bag', label: 'Box Bag (W-cut)' },
 ];
 
 const orderStatuses = [
@@ -44,6 +44,7 @@ const orderStatuses = [
   { value: 'completed', label: 'Completed' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
+
 
 export default function OrderForm({ open, onClose, onSubmit, order = null }) {
   const [formData, setFormData] = useState(initialFormData);

@@ -62,7 +62,7 @@ export default function AdminFlexoOverview() {
         />
       </Grid>
       <Grid item xs={12}>
-        <FlexoOrderList 
+        <FlexoOrderList
           orders={data.orders}
           onVerify={handleVerify}
           onFilterChange={handleFilterChange}
