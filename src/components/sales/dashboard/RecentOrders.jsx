@@ -1,7 +1,7 @@
 import { Card, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import orderService from '/src/services/orderService.js'; // Import the service
+import orderService from '/src/services/orderService.js';
 
 const mockOrders = [
   {
@@ -55,6 +55,7 @@ export default function RecentOrders() {
     };
     return colors[status] || 'default';
   };
+
   useEffect(() => {
     // Fetch orders from API
     const fetchOrders = async () => {
@@ -70,6 +71,7 @@ export default function RecentOrders() {
 
     fetchOrders();
   }, []);
+
   return (
     <Card>
       <div className="flex justify-between items-center p-4">
@@ -96,7 +98,7 @@ export default function RecentOrders() {
           <TableBody>
             {orders.length > 0 ? (
               orders.map((order) => (
-                <TableRow key={order.id}>
+                <TableRow key={order.id || `order-${order._id}`}>
                   <TableCell>{order.customerName}</TableCell>
                   <TableCell>{order.jobName}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
@@ -119,7 +121,6 @@ export default function RecentOrders() {
           </TableBody>
         </Table>
       </TableContainer>
-
     </Card>
   );
 }

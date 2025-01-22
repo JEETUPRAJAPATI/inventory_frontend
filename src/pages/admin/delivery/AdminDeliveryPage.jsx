@@ -1,35 +1,35 @@
 import { useState } from 'react';
-import { Grid, Button, Box } from '@mui/material';
-import DeliveryList from './components/DeliveryList';
-import DeliveryStats from './components/DeliveryStats';
+import { Grid } from '@mui/material';
+import DeliveryList from '../../../components/admin/delivery/DeliveryList';
+import DeliveryStats from '../../../components/admin/delivery/DeliveryStats';
+import { useAdminData } from '../../../hooks/useAdminData';
 
 export default function AdminDeliveryPage() {
-  const [activeTab, setActiveTab] = useState('pending');
+  const [filters, setFilters] = useState({
+    delivery_status: '',
+    date: ''
+  });
+
+  const { data, loading, updateParams } = useAdminData('getDeliveries', filters);
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    updateParams(newFilters);
+  };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
-        <DeliveryStats />
+        <DeliveryStats stats={data.stats} />
       </Grid>
-      
       <Grid item xs={12}>
-        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-          <Button
-            variant={activeTab === 'pending' ? 'contained' : 'outlined'}
-            onClick={() => setActiveTab('pending')}
-            size="large"
-          >
-            Pending Deliveries
-          </Button>
-          <Button
-            variant={activeTab === 'completed' ? 'contained' : 'outlined'}
-            onClick={() => setActiveTab('completed')}
-            size="large"
-          >
-            Completed Deliveries
-          </Button>
-        </Box>
-        <DeliveryList status={activeTab} />
+        <DeliveryList 
+          deliveries={data.deliveries} 
+          filters={filters}
+          onFilterChange={handleFilterChange}
+        />
       </Grid>
     </Grid>
   );

@@ -1,56 +1,72 @@
+import { useState } from 'react';
 import { Grid } from '@mui/material';
 import SummaryCard from '../../../components/dashboard/SummaryCard';
 import FlexoOrderList from '../../production/components/FlexoOrderList';
-import { useState } from 'react';
 import VerifyOrderDialog from '../../production/components/VerifyOrderDialog';
+import { useAdminData } from '../../../hooks/useAdminData';
 
 export default function AdminFlexoOverview() {
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [filters, setFilters] = useState({
+    status: '',
+    date: ''
+  });
+
+  const { data, loading, updateParams } = useAdminData('getWCutFlexo', filters);
 
   const handleVerify = (order) => {
     setSelectedOrder(order);
     setVerifyDialogOpen(true);
   };
 
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    updateParams(newFilters);
+  };
+
+  if (loading) return <div>Loading...</div>;
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={3}>
         <SummaryCard
           title="Total Orders"
-          value="234"
-          increase="+10%"
+          value={data.totalOrders || 0}
+          increase={data.ordersGrowth}
           color="primary"
         />
       </Grid>
       <Grid item xs={12} md={3}>
         <SummaryCard
           title="In Progress"
-          value="45"
-          increase="+5%"
+          value={data.inProgressOrders || 0}
+          increase={data.progressGrowth}
           color="warning"
         />
       </Grid>
       <Grid item xs={12} md={3}>
         <SummaryCard
           title="Completed Today"
-          value="28"
-          increase="+15%"
+          value={data.completedToday || 0}
+          increase={data.completionGrowth}
           color="success"
         />
       </Grid>
       <Grid item xs={12} md={3}>
         <SummaryCard
           title="Efficiency Rate"
-          value="85%"
-          increase="+2%"
+          value={`${data.efficiencyRate || 0}%`}
+          increase={data.efficiencyGrowth}
           color="info"
         />
       </Grid>
       <Grid item xs={12}>
         <FlexoOrderList 
-          status="pending"
+          orders={data.orders}
           onVerify={handleVerify}
+          onFilterChange={handleFilterChange}
+          filters={filters}
         />
       </Grid>
 

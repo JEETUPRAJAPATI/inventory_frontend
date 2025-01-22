@@ -10,16 +10,16 @@ import {
   Card,
   Box,
 } from '@mui/material';
-import { QrCodeScanner, Update, LocalShipping, Print } from '@mui/icons-material';
+import { Print, Update, LocalShipping } from '@mui/icons-material';
 import FilterBar from '../../common/FilterBar';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import adminService from '../../../services/adminService';
 
-export default function FlexoOrderList({ orders, onVerify, onFilterChange, filters }) {
+export default function OpsertOrderList({ orders, onFilterChange, filters }) {
   const handleStartPrinting = async (orderId) => {
     try {
-      await adminService.startFlexoPrinting(orderId);
+      await adminService.startOpsertPrinting(orderId);
       toast.success('Printing process started');
     } catch (error) {
       toast.error('Failed to start printing');
@@ -28,17 +28,17 @@ export default function FlexoOrderList({ orders, onVerify, onFilterChange, filte
 
   const handleUpdateStatus = async (orderId) => {
     try {
-      await adminService.updateFlexoStatus(orderId, 'completed');
-      toast.success('Order status updated successfully');
+      await adminService.updateOpsertStatus(orderId, 'completed');
+      toast.success('Order completed successfully');
     } catch (error) {
       toast.error('Failed to update status');
     }
   };
 
-  const handleMoveToBagMaking = async (orderId) => {
+  const handleMoveToDelivery = async (orderId) => {
     try {
-      await adminService.moveFlexoToBagMaking(orderId);
-      toast.success('Order moved to Bag Making Process');
+      await adminService.moveOpsertToDelivery(orderId);
+      toast.success('Order moved to Delivery');
     } catch (error) {
       toast.error('Failed to move order');
     }
@@ -62,12 +62,9 @@ export default function FlexoOrderList({ orders, onVerify, onFilterChange, filte
             <TableRow>
               <TableCell>Order ID</TableCell>
               <TableCell>Job Name</TableCell>
-              <TableCell>Fabric Quality</TableCell>
-              <TableCell>GSM</TableCell>
-              <TableCell>Fabric Color</TableCell>
               <TableCell>Bag Type</TableCell>
-              <TableCell>Roll Size</TableCell>
-              <TableCell>Cylinder Size</TableCell>
+              <TableCell>Print Type</TableCell>
+              <TableCell>Print Color</TableCell>
               <TableCell>Quantity</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
@@ -78,12 +75,9 @@ export default function FlexoOrderList({ orders, onVerify, onFilterChange, filte
               <TableRow key={order._id}>
                 <TableCell>{order.orderId}</TableCell>
                 <TableCell>{order.jobName}</TableCell>
-                <TableCell>{order.fabricQuality}</TableCell>
-                <TableCell>{order.gsm}</TableCell>
-                <TableCell>{order.fabricColor}</TableCell>
                 <TableCell>{order.bagType}</TableCell>
-                <TableCell>{order.rollSize}</TableCell>
-                <TableCell>{order.cylinderSize}</TableCell>
+                <TableCell>{order.printType}</TableCell>
+                <TableCell>{order.printColor}</TableCell>
                 <TableCell>{order.quantity}</TableCell>
                 <TableCell>
                   <Chip
@@ -97,25 +91,15 @@ export default function FlexoOrderList({ orders, onVerify, onFilterChange, filte
                 </TableCell>
                 <TableCell>
                   {order.status === 'pending' && (
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        startIcon={<Print />}
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => handleStartPrinting(order._id)}
-                      >
-                        Start Printing
-                      </Button>
-                      <Button
-                        startIcon={<QrCodeScanner />}
-                        variant="outlined"
-                        size="small"
-                        onClick={() => onVerify(order)}
-                      >
-                        Verify
-                      </Button>
-                    </Box>
+                    <Button
+                      startIcon={<Print />}
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      onClick={() => handleStartPrinting(order._id)}
+                    >
+                      Start Printing
+                    </Button>
                   )}
                   {order.status === 'in_progress' && (
                     <Button
@@ -134,9 +118,9 @@ export default function FlexoOrderList({ orders, onVerify, onFilterChange, filte
                       variant="contained"
                       color="primary"
                       size="small"
-                      onClick={() => handleMoveToBagMaking(order._id)}
+                      onClick={() => handleMoveToDelivery(order._id)}
                     >
-                      Move to Bag Making
+                      Move to Delivery
                     </Button>
                   )}
                 </TableCell>
