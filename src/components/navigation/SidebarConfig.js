@@ -4,10 +4,10 @@ export const menuConfigs = {
     { title: 'User Management', path: '/admin/users', icon: 'People' },
     { title: 'Role Management', path: '/admin/roles', icon: 'Security' },
     { title: 'Sales', path: '/admin/sales', icon: 'ShoppingCart' },
-    { title: 'flexo', path: '/admin/flexo', icon: 'Assessment' },
-    { title: 'w-cut Bag Making', path: '/admin/wcut', icon: 'Assessment' },
-    { title: 'd-cut Bag Making', path: '/admin/dcut', icon: 'Assessment' },
-    { title: 'Opsert', path: '/admin/opsert', icon: 'Assessment' },
+    { title: 'W-Cut Flexo', path: '/admin/flexo', icon: 'Assessment' },
+    { title: 'W-Cut Bag Making', path: '/admin/wcut', icon: 'Assessment' },
+    { title: 'D-Cut Bag Making', path: '/admin/dcut', icon: 'Assessment' },
+    { title: 'D-Cut Opsert', path: '/admin/opsert', icon: 'Assessment' },
   ],
 
   production_manager: [

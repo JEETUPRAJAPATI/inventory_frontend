@@ -1,10 +1,33 @@
 import { Box, TextField, MenuItem, Button } from '@mui/material';
 import { Search, FilterList } from '@mui/icons-material';
+import { useCallback } from 'react';
+import debounce from 'lodash/debounce';
 
 export default function FilterBar({ filters, onFilterChange, filterOptions }) {
+  // Debounce the search input
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      onFilterChange({ ...filters, search: value });
+    }, 500),
+    [filters, onFilterChange]
+  );
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    onFilterChange({ ...filters, [name]: value });
+    
+    if (name === 'search') {
+      debouncedSearch(value);
+    } else {
+      onFilterChange({ ...filters, [name]: value });
+    }
+  };
+
+  const handleReset = () => {
+    onFilterChange({
+      search: '',
+      status: 'all',
+      type: 'all'
+    });
   };
 
   return (
@@ -13,7 +36,7 @@ export default function FilterBar({ filters, onFilterChange, filterOptions }) {
         size="small"
         placeholder="Search..."
         name="search"
-        value={filters.search}
+        defaultValue={filters.search}
         onChange={handleChange}
         InputProps={{
           startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />,
@@ -33,7 +56,9 @@ export default function FilterBar({ filters, onFilterChange, filterOptions }) {
       >
         <MenuItem value="all">All Status</MenuItem>
         {filterOptions.status.map(status => (
-          <MenuItem key={status} value={status}>{status}</MenuItem>
+          <MenuItem key={status} value={status}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </MenuItem>
         ))}
       </TextField>
 
@@ -55,11 +80,7 @@ export default function FilterBar({ filters, onFilterChange, filterOptions }) {
 
       <Button
         variant="outlined"
-        onClick={() => onFilterChange({
-          search: '',
-          status: 'all',
-          type: 'all'
-        })}
+        onClick={handleReset}
       >
         Reset
       </Button>

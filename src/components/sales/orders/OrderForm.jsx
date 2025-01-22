@@ -9,24 +9,19 @@ import {
 } from '@mui/material';
 import FormInput from '../../common/FormInput';
 import FormSelect from '../../common/FormSelect';
-import orderService from '/src/services/orderService.js';
-import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 
 const initialFormData = {
   customerName: '',
   email: '',
   address: '',
   mobileNumber: '',
-  bagDetails: {
-    type: '',
-    handleColor: '',
-    size: '',
-    color: '',
-    printColor: '',
-    gsm: '',
-  },
+  bagType: '',
+  handleColor: '',
+  size: '',
   jobName: '',
+  bagColor: '',
+  printColor: '',
+  gsm: '',
   fabricQuality: '',
   quantity: '',
   agent: '',
@@ -34,8 +29,8 @@ const initialFormData = {
 };
 
 const bagTypes = [
-  { value: 'd_cut_loop_handle', label: 'Loop Handle (D-cut)' },
-  { value: 'w_cut_box_bag', label: 'Box Bag (W-cut)' },
+  { value: 'loop handle', label: 'Loop Handle (D-cut)' },
+  { value: 'box bag', label: 'Box Bag (W-cut)' },
 ];
 
 const orderStatuses = [
@@ -45,26 +40,12 @@ const orderStatuses = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
-
 export default function OrderForm({ open, onClose, onSubmit, order = null }) {
   const [formData, setFormData] = useState(initialFormData);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (order) {
-      // Ensure bagDetails and other fields are set correctly
-      setFormData({
-        ...order,
-        bagDetails: {
-          type: order.bagDetails?.type || '',
-          handleColor: order.bagDetails?.handleColor || '',
-          size: order.bagDetails?.size || '',
-          color: order.bagDetails?.color || '',
-          printColor: order.bagDetails?.printColor || '',
-          gsm: order.bagDetails?.gsm || '',
-        }
-      });
+      setFormData(order);
     } else {
       setFormData(initialFormData);
     }
@@ -72,49 +53,20 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const [section, field] = name.split('.');
-
-    if (section && field) {
-      setFormData(prev => ({
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: value,
-        },
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Remove _id if it exists (for update case)
-    const { _id, orderId, createdAt, updatedAt, __v, ...orderDataWithoutId } = formData;
-    try {
-      if (order) {
-        await orderService.updateOrder(order._id, orderDataWithoutId); // Update order without _id
-        toast.success('Order updated successfully!');
-      } else {
-        await orderService.createOrder(orderDataWithoutId); // Create new order without _id
-        toast.success('Order created successfully!');
-      }
-      onSubmit(formData); // Pass the form data back to the parent
-      onClose();
-      setFormData(initialFormData); // Reset form after submit
-    } catch (error) {
-      toast.error(error.message || 'Failed to create or update order');
-    } finally {
-      setLoading(false);
-    }
+    onSubmit(formData);
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>{order ? 'Edit Order' : 'Create New Order'}</DialogTitle>
+        <DialogTitle>
+          {order ? 'Edit Order' : 'Create New Order'}
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             {/* Customer Information */}
@@ -162,8 +114,8 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
             <Grid item xs={12} md={6}>
               <FormSelect
                 label="Bag Type"
-                name="bagDetails.type"
-                value={formData.bagDetails.type}
+                name="bagType"
+                value={formData.bagType}
                 onChange={handleChange}
                 options={bagTypes}
                 required
@@ -172,16 +124,16 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
             <Grid item xs={12} md={6}>
               <FormInput
                 label="Handle Color"
-                name="bagDetails.handleColor"
-                value={formData.bagDetails.handleColor}
+                name="handleColor"
+                value={formData.handleColor}
                 onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <FormInput
                 label="Size"
-                name="bagDetails.size"
-                value={formData.bagDetails.size}
+                name="size"
+                value={formData.size}
                 onChange={handleChange}
                 required
                 placeholder="e.g., 12x15x4 inches"
@@ -199,8 +151,8 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
             <Grid item xs={12} md={6}>
               <FormInput
                 label="Bag Color"
-                name="bagDetails.color"
-                value={formData.bagDetails.color}
+                name="bagColor"
+                value={formData.bagColor}
                 onChange={handleChange}
                 required
               />
@@ -210,8 +162,8 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
             <Grid item xs={12} md={6}>
               <FormInput
                 label="Print Color"
-                name="bagDetails.printColor"
-                value={formData.bagDetails.printColor}
+                name="printColor"
+                value={formData.printColor}
                 onChange={handleChange}
                 required
               />
@@ -219,9 +171,9 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
             <Grid item xs={12} md={6}>
               <FormInput
                 label="GSM"
-                name="bagDetails.gsm"
+                name="gsm"
                 type="number"
-                value={formData.bagDetails.gsm}
+                value={formData.gsm}
                 onChange={handleChange}
                 required
               />
@@ -270,7 +222,7 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained" color="primary" disabled={loading}>
+          <Button type="submit" variant="contained" color="primary">
             {order ? 'Update' : 'Create'} Order
           </Button>
         </DialogActions>

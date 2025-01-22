@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Card,
   Table,
@@ -19,7 +19,6 @@ import DeleteConfirmDialog from '../../common/DeleteConfirmDialog';
 import { useOrders } from '../../../hooks/useOrders';
 import { getStatusColor } from '../../../utils/statusColors';
 import toast from 'react-hot-toast';
-import orderService from '/src/services/orderService.js'; // Import the service
 
 // Mock data for demonstration
 const mockOrders = [
@@ -50,8 +49,7 @@ export default function OrderList() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedQrOrder, setSelectedQrOrder] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+
   const handleAdd = () => {
     setSelectedOrder(null);
     setFormOpen(true);
@@ -63,7 +61,6 @@ export default function OrderList() {
   };
 
   const handleDelete = (order) => {
-
     setOrderToDelete(order);
     setDeleteDialogOpen(true);
   };
@@ -73,55 +70,24 @@ export default function OrderList() {
     setQrDialogOpen(true);
   };
 
-
-  const fetchOrders = async () => {
-    setLoading(true); // Set loading to true while fetching
-    try {
-      const response = await orderService.getOrders();
-      setOrders(response.data); // Update state with fetched orders
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false); // Set loading to false once fetch is complete
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  // Handle form submission
   const handleFormSubmit = async (formData) => {
     try {
       const message = selectedOrder ? 'Order updated successfully' : 'Order created successfully';
       toast.success(message);
       setFormOpen(false);
-
-      // Refetch orders to get the latest data from the API
-      await fetchOrders();
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-
   const handleDeleteConfirm = async () => {
     try {
-      // Call the API to delete the order
-      await orderService.deleteOrder(orderToDelete._id); // Use the deleteOrder function from the service
-      // Optimistic UI update: Remove the order from the local state
-      setOrders((prevOrders) =>
-        prevOrders.filter((order) => order._id !== orderToDelete._id)
-      );
-      // Show success toast
       toast.success('Order deleted successfully');
       setDeleteDialogOpen(false);
     } catch (error) {
-      // Show error toast if deletion fails
-      toast.error(error.message || 'Failed to delete order');
+      toast.error(error.message);
     }
   };
-
 
   return (
     <>
@@ -151,12 +117,12 @@ export default function OrderList() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders.map((order) => (
+              {mockOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell>{order.orderId}</TableCell>
+                  <TableCell>{order.id}</TableCell>
                   <TableCell>{order.customerName}</TableCell>
                   <TableCell>{order.jobName}</TableCell>
-                  <TableCell>{order.bagDetails.type}</TableCell>
+                  <TableCell>{order.bagType}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
                   <TableCell>
                     <Chip

@@ -7,89 +7,104 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
   Typography,
+  TablePagination,
+  Box,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import FilterBar from '../../common/FilterBar';
-import { productionRecords } from '../../../data/dummyData';
+import { useAdminProduction } from '../../../hooks/useAdminProduction';
 
 export default function ProductionList({ type, category }) {
-  const [filters, setFilters] = useState({
-    search: '',
-    status: 'all'
-  });
+  const {
+    data,
+    loading,
+    error,
+    pagination,
+    filters,
+    updateFilters,
+    updatePagination
+  } = useAdminProduction(type, category);
 
-  const filterOptions = {
-    status: ['Pending', 'In Progress', 'Completed']
+  const handlePageChange = (event, newPage) => {
+    updatePagination(newPage + 1);
   };
 
-  const records = type === 'wCut'
-    ? productionRecords.wCut[category]
-    : productionRecords.dCut[category];
+  const handleRowsPerPageChange = (event) => {
+    updatePagination(1, parseInt(event.target.value, 10));
+  };
 
-  const filteredRecords = records.filter(record => {
-    const matchesSearch = record.orderId.toLowerCase().includes(filters.search.toLowerCase()) ||
-                         record.operator.toLowerCase().includes(filters.search.toLowerCase());
-    const matchesStatus = filters.status === 'all' || record.status === filters.status;
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-    return matchesSearch && matchesStatus;
-  });
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {error}
+      </Alert>
+    );
+  }
 
   return (
-    <>
-      <Typography variant="h6" gutterBottom>
-        {type === 'wCut' ? 'W-Cut' : 'D-Cut'} - {category === 'flexo' ? 'Flexo Printing' :
-          category === 'opsert' ? 'Opsert Printing' : 'Bag Making'}
-      </Typography>
+    <Card>
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Production Records
+        </Typography>
 
-      <FilterBar
-        filters={filters}
-        onFilterChange={setFilters}
-        filterOptions={filterOptions}
-      />
+        <FilterBar
+          filters={filters}
+          onFilterChange={updateFilters}
+          filterOptions={{
+            status: ['pending', 'in_progress', 'completed']
+          }}
+        />
 
-      <Card>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Production ID</TableCell>
                 <TableCell>Order ID</TableCell>
                 <TableCell>Job Name</TableCell>
-                <TableCell>Stage</TableCell>
                 <TableCell>Operator</TableCell>
+                <TableCell>Quantity</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell>Start Date</TableCell>
                 <TableCell>Completion Date</TableCell>
-                <TableCell>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRecords.map((record) => (
+              {data.map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell>{record.id}</TableCell>
                   <TableCell>{record.orderId}</TableCell>
-                  <TableCell>{record.name}</TableCell>
-                  <TableCell>{record.stage}</TableCell>
+                  <TableCell>{record.jobName}</TableCell>
                   <TableCell>{record.operator}</TableCell>
+                  <TableCell>{record.quantity}</TableCell>
+                  <TableCell>{record.status}</TableCell>
                   <TableCell>{record.startDate}</TableCell>
-                  <TableCell>{record.completionDate}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={record.status}
-                      color={
-                        record.status === 'Completed' ? 'success' :
-                        record.status === 'In Progress' ? 'warning' :
-                        'default'
-                      }
-                      size="small"
-                    />
-                  </TableCell>
+                  <TableCell>{record.completionDate || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
-      </Card>
-    </>
+
+        <TablePagination
+          component="div"
+          count={pagination.total}
+          page={pagination.page - 1}
+          rowsPerPage={pagination.limit}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+          rowsPerPageOptions={[10, 20, 50]}
+        />
+      </Box>
+    </Card>
   );
 }

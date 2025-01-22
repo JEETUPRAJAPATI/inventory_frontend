@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Card,
   Table,
@@ -16,33 +16,42 @@ import {
 import { Edit, Delete, Add } from '@mui/icons-material';
 import UserForm from '../components/users/UserForm';
 import DeleteConfirmDialog from '../components/common/DeleteConfirmDialog';
-import { useAdminData } from '../hooks/useAdminData';
-import adminService from '../services/adminService';
 import toast from 'react-hot-toast';
+
+const mockUsers = [
+  { 
+    id: 1, 
+    fullName: 'John Doe',
+    email: 'john@example.com',
+    mobileNumber: '+1234567890',
+    registrationType: 'admin',
+    status: 'Active'
+  },
+  { 
+    id: 2, 
+    fullName: 'Jane Smith',
+    email: 'jane@example.com',
+    mobileNumber: '+0987654321',
+    registrationType: 'sales',
+    status: 'Active'
+  },
+];
 
 export default function UserManagement() {
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
-  const { data, loading, updateParams, refetch } = useAdminData('getUsers', {
-    page: page + 1,
-    limit: rowsPerPage
-  });
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
-    updateParams({ page: newPage + 1 });
   };
 
   const handleChangeRowsPerPage = (event) => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    setRowsPerPage(newRowsPerPage);
+    setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-    updateParams({ page: 1, limit: newRowsPerPage });
   };
 
   const handleAdd = () => {
@@ -50,14 +59,9 @@ export default function UserManagement() {
     setFormOpen(true);
   };
 
-  const handleEdit = async (userId) => {
-    try {
-      const user = await adminService.getUserById(userId);
-      setSelectedUser(user);
-      setFormOpen(true);
-    } catch (error) {
-      toast.error('Failed to fetch user details');
-    }
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setFormOpen(true);
   };
 
   const handleDelete = (user) => {
@@ -65,34 +69,20 @@ export default function UserManagement() {
     setDeleteDialogOpen(true);
   };
 
-  const handleFormSubmit = async (formData) => {
-    try {
-      if (selectedUser) {
-        await adminService.updateUser(selectedUser.data._id, formData);
-        toast.success('User updated successfully');
-      } else {
-        await adminService.createUser(formData);
-        toast.success('User added successfully');
-      }
-      setFormOpen(false);
-      refetch();
-    } catch (error) {
-      toast.error(error.message || 'Operation failed');
-    }
+  const handleFormSubmit = (formData) => {
+    // Handle form submission (add/edit user)
+    const message = selectedUser 
+      ? 'User updated successfully'
+      : 'User added successfully';
+    toast.success(message);
+    setFormOpen(false);
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      await adminService.deleteUser(userToDelete._id);
-      toast.success('User deleted successfully');
-      setDeleteDialogOpen(false);
-      refetch();
-    } catch (error) {
-      toast.error('Failed to delete user');
-    }
+  const handleDeleteConfirm = () => {
+    // Handle delete confirmation
+    toast.success('User deleted successfully');
+    setDeleteDialogOpen(false);
   };
-
-  if (loading) return <div>Loading...</div>;
 
   return (
     <>
@@ -121,47 +111,49 @@ export default function UserManagement() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {data?.data?.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.fullName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.mobileNumber}</TableCell>
-                  <TableCell>
-                    {user.registrationType.charAt(0).toUpperCase() +
-                      user.registrationType.slice(1)}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={user.status}
-                      color={user.status === 'active' ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleEdit(user._id)}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(user)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {mockUsers
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.fullName}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.mobileNumber}</TableCell>
+                    <TableCell>
+                      {user.registrationType.charAt(0).toUpperCase() + 
+                       user.registrationType.slice(1)}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={user.status}
+                        color={user.status === 'Active' ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton 
+                        size="small" 
+                        color="primary"
+                        onClick={() => handleEdit(user)}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDelete(user)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={data.total || 0}
+          count={mockUsers.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
