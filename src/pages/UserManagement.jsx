@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Card,
   Table,
@@ -122,7 +122,7 @@ export default function UserManagement() {
             </TableHead>
             <TableBody>
               {data?.data?.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user._id || user.id}>
                   <TableCell>{user.fullName}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.mobileNumber}</TableCell>

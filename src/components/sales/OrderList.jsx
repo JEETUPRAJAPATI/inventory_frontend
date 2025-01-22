@@ -52,8 +52,8 @@ export default function OrderList() {
                 <TableCell>{order.customer}</TableCell>
                 <TableCell>{order.amount}</TableCell>
                 <TableCell>
-                  <Chip 
-                    label={order.status} 
+                  <Chip
+                    label={order.status}
                     color={order.status === 'Completed' ? 'success' : 'warning'}
                     size="small"
                   />
@@ -63,8 +63,8 @@ export default function OrderList() {
                   <IconButton size="small" color="primary">
                     <Edit />
                   </IconButton>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     color="error"
                     onClick={() => handleDelete(order)}
                   >

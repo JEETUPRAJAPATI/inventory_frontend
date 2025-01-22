@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Grid,
+  Box,
   Card,
   Table,
   TableBody,
@@ -12,32 +12,32 @@ import {
   Typography,
   Chip,
   TextField,
-  Box,
+  Grid,
 } from '@mui/material';
-import { Delete } from '@mui/icons-material';
-import adminService from '../../services/adminService';
+import { Print, Update, LocalShipping } from '@mui/icons-material';
+import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
-import SummaryCard from '../../components/dashboard/SummaryCard';
 
-export default function AdminSalesOverview() {
+export default function WCutFlexoPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
-    status: '',
-    type: 'all'
+    status: '', // Changed from 'all' to empty string for default view
+    page: 1,
+    limit: 10
   });
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await adminService.getSales(filters);
-      console.log('Sales response:', response); // Debug log
-      setOrders(response.data || []);
+      const response = await adminService.getWCutFlexo(filters);
+      console.log(response.data);
+      // Check if response.data exists and has the expected structure
+      setOrders(response.data || []); // Adjust based on your API response structure
     } catch (error) {
-      console.error('Error fetching sales:', error); // Debug log
       toast.error(error.message);
-      setOrders([]);
+      setOrders([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -51,60 +51,34 @@ export default function AdminSalesOverview() {
     const { name, value } = e.target;
     setFilters(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      page: 1 // Reset page when filters change
     }));
   };
 
-  const handleDelete = async (orderId) => {
+  const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await adminService.deleteSalesOrder(orderId);
-      toast.success('Order deleted successfully');
+      await adminService.updateProductionStatus('w-cut-flexo', orderId, newStatus);
+      toast.success('Status updated successfully');
       fetchOrders();
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  // Calculate summary metrics
-  const totalOrders = orders.length;
-  const pendingOrders = orders.filter(order => order.status === 'pending').length;
-  const completedOrders = orders.filter(order => order.status === 'completed').length;
-  const totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  const handleMoveToBagMaking = async (orderId) => {
+    try {
+      await adminService.moveToNextStage('w-cut-flexo', orderId, 'bag-making');
+      toast.success('Order moved to Bag Making');
+      fetchOrders();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>Sales Overview</Typography>
-
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Total Orders"
-            value={totalOrders}
-            color="primary"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Pending Orders"
-            value={pendingOrders}
-            color="warning"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Completed Orders"
-            value={completedOrders}
-            color="success"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Total Amount"
-            value={`₹${totalAmount.toLocaleString()}`}
-            color="info"
-          />
-        </Grid>
-      </Grid>
+      <Typography variant="h5" gutterBottom>W-Cut Flexo Production</Typography>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
@@ -114,7 +88,6 @@ export default function AdminSalesOverview() {
             name="search"
             value={filters.search}
             onChange={handleFilterChange}
-            placeholder="Search by order ID or customer name"
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -127,7 +100,7 @@ export default function AdminSalesOverview() {
             onChange={handleFilterChange}
             SelectProps={{ native: true }}
           >
-            <option value="">All Status</option>
+            <option value="">All</option>
             <option value="pending">Pending</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
@@ -150,43 +123,60 @@ export default function AdminSalesOverview() {
               <TableHead>
                 <TableRow>
                   <TableCell>Order ID</TableCell>
-                  <TableCell>Customer Name</TableCell>
                   <TableCell>Job Name</TableCell>
-                  <TableCell>Bag Type</TableCell>
                   <TableCell>Quantity</TableCell>
-                  <TableCell>Amount</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {orders.map((order) => (
-                  <TableRow key={order._id}>
+                  <TableRow key={order.id}>
                     <TableCell>{order.orderId}</TableCell>
-                    <TableCell>{order.customerName}</TableCell>
                     <TableCell>{order.jobName}</TableCell>
-                    <TableCell>{order.bagDetails?.type}</TableCell>
                     <TableCell>{order.quantity}</TableCell>
-                    <TableCell>₹{order.totalAmount?.toLocaleString()}</TableCell>
                     <TableCell>
                       <Chip
                         label={order.status.toUpperCase()}
                         color={
                           order.status === 'completed' ? 'success' :
-                          order.status === 'in_progress' ? 'warning' : 'default'
+                            order.status === 'in_progress' ? 'warning' : 'default'
                         }
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="small"
-                        color="error"
-                        startIcon={<Delete />}
-                        onClick={() => handleDelete(order._id)}
-                      >
-                        Delete
-                      </Button>
+                      {order.status === 'pending' && (
+                        <Button
+                          startIcon={<Print />}
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleStatusUpdate(order.id, 'in_progress')}
+                        >
+                          Start Process
+                        </Button>
+                      )}
+                      {order.status === 'in_progress' && (
+                        <Button
+                          startIcon={<Update />}
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          onClick={() => handleStatusUpdate(order.id, 'completed')}
+                        >
+                          Complete
+                        </Button>
+                      )}
+                      {order.status === 'completed' && (
+                        <Button
+                          startIcon={<LocalShipping />}
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={() => handleMoveToBagMaking(order.id)}
+                        >
+                          Move to Bag Making
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
