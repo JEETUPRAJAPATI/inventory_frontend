@@ -32,15 +32,14 @@ export default function SalesOrderList({ onFilterChange }) {
     onFilterChange(newFilters);
   };
 
-  const handleDelete = async (orderId) => {
-    try {
-      await adminService.deleteSalesOrder(orderId);
-      toast.success('Order deleted successfully');
-      setData((prevData) => prevData.filter((order) => order._id !== orderId)); // Update the list after deletion
-    } catch (error) {
-      toast.error('Failed to delete order');
-    }
-  };
+  const filteredOrders = salesOrders.filter(order => {
+    const matchesSearch = order.customerName.toLowerCase().includes(filters.search.toLowerCase()) ||
+      order.id.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesStatus = filters.status === 'all' || order.status === filters.status;
+    const matchesType = filters.type === 'all' || order.bagType === filters.type;
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
   return (
     <Card>
