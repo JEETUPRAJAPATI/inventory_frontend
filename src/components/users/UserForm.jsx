@@ -1,14 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Grid,
-} from '@mui/material';
-import FormInput from '../common/FormInput';
-import FormSelect from '../common/FormSelect';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
 import { registrationTypes } from '../../constants/userTypes';
 import { productionManagerBagTypes, operatorTypesByBag } from '../../constants/productionTypes';
 
@@ -16,6 +7,8 @@ const initialFormData = {
   fullName: '',
   email: '',
   mobileNumber: '',
+  password: '',
+  confirmPassword: '',
   registrationType: '',
   bagType: '',
   operatorType: '',
@@ -25,8 +18,19 @@ export default function UserForm({ open, onClose, onSubmit, user = null }) {
   const [formData, setFormData] = useState(initialFormData);
 
   useEffect(() => {
-    if (user) {
-      setFormData(user);
+    if (user && Object.keys(user).length > 0) {
+      console.log("Fetched user data:", user.data.fullName);  // Debug the response
+      const mappedData = {
+        fullName: user.data.fullName || '',
+        email: user.data.email || '',
+        mobileNumber: user.data.mobileNumber || '',
+        password: '',
+        confirmPassword: '',
+        registrationType: user.data.registrationType || '',
+        bagType: user.data.bagType || '',
+        operatorType: user.data.operatorType || '',
+      };
+      setFormData(mappedData);
     } else {
       setFormData(initialFormData);
     }
@@ -34,103 +38,169 @@ export default function UserForm({ open, onClose, onSubmit, user = null }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => {
+
+    setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      
-      // Reset dependent fields
+
       if (name === 'registrationType') {
-        newData.bagType = '';
+        newData.bagType = ''; // Clear dependent fields
         newData.operatorType = '';
       }
-      
-      // Reset operator type when bag type changes
+
       if (name === 'bagType') {
-        newData.operatorType = '';
+        newData.operatorType = ''; // Clear dependent fields
       }
-      
+
       return newData;
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+
+    const dataToSubmit = { ...formData };
+    if (!dataToSubmit.password) {
+      delete dataToSubmit.password;
+      delete dataToSubmit.confirmPassword;
+    }
+
+    onSubmit(dataToSubmit);
   };
 
-  const showBagTypeField = formData.registrationType === 'production_manager';
+  const showBagTypeField = formData.registrationType === 'production';
   const showOperatorTypeField = showBagTypeField && formData.bagType;
   const operatorOptions = formData.bagType ? operatorTypesByBag[formData.bagType] : [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>
-          {user ? 'Edit User' : 'Add New User'}
-        </DialogTitle>
+        <DialogTitle>{user ? 'Edit User' : 'Add New User'}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
-              <FormInput
+              <TextField
                 label="Full Name"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
                 required
+                fullWidth
               />
             </Grid>
+
             <Grid item xs={12}>
-              <FormInput
+              <TextField
                 label="Email"
                 name="email"
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
+                fullWidth
               />
             </Grid>
+
             <Grid item xs={12}>
-              <FormInput
+              <TextField
                 label="Mobile Number"
                 name="mobileNumber"
                 value={formData.mobileNumber}
                 onChange={handleChange}
                 required
+                fullWidth
               />
             </Grid>
+
+            {!user && (
+              <>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    fullWidth
+                  />
+                </Grid>
+              </>
+            )}
+
             <Grid item xs={12}>
-              <FormSelect
-                label="Registration Type"
-                name="registrationType"
-                value={formData.registrationType}
-                onChange={handleChange}
-                options={registrationTypes}
-                required
-              />
+              <FormControl fullWidth>
+                <InputLabel>Registration Type</InputLabel>
+                <Select
+                  label="Registration Type"
+                  name="registrationType"
+                  value={formData.registrationType}
+                  onChange={handleChange}
+                  required
+                >
+                  {registrationTypes.map((type, index) => (
+                    <MenuItem key={index} value={type.value}>
+                      {type.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
 
             {showBagTypeField && (
               <Grid item xs={12}>
-                <FormSelect
-                  label="Bag Making Type"
-                  name="bagType"
-                  value={formData.bagType}
-                  onChange={handleChange}
-                  options={productionManagerBagTypes}
-                  required
-                />
+                <FormControl fullWidth>
+                  <InputLabel>Bag Making Type</InputLabel>
+                  <Select
+                    label="Bag Making Type"
+                    name="bagType"
+                    value={formData.bagType}
+                    onChange={handleChange}
+                    required
+                  >
+                    {productionManagerBagTypes.map((type, index) => (
+                      <MenuItem key={index} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
             )}
 
             {showOperatorTypeField && (
               <Grid item xs={12}>
-                <FormSelect
-                  label="Operator Type"
-                  name="operatorType"
-                  value={formData.operatorType}
-                  onChange={handleChange}
-                  options={operatorOptions}
-                  required
-                />
+                <FormControl fullWidth>
+                  <InputLabel>Operator Type</InputLabel>
+                  <Select
+                    label="Operator Type"
+                    name="operatorType"
+                    value={formData.operatorType}
+                    onChange={handleChange}
+                    required
+                  >
+                    {operatorOptions.map((type, index) => (
+                      <MenuItem key={index} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
             )}
           </Grid>

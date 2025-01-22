@@ -1,119 +1,107 @@
-import { useState } from 'react';
-import {
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Typography,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-} from '@mui/material';
-import { QrCode } from '@mui/icons-material';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useEffect, useState } from 'react';
+import { Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Typography, Chip, Box } from '@mui/material';
+import { Edit, Delete, QrCode } from '@mui/icons-material';
 import FilterBar from '../../common/FilterBar';
-import { salesOrders } from '../../../data/dummyData';
+import toast from 'react-hot-toast';
+import adminService from '../../../services/adminService';
 
-export default function SalesOrderList() {
+export default function SalesOrderList({ onFilterChange }) {
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
     type: 'all'
   });
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [data, setData] = useState([]);
 
-  const filterOptions = {
-    status: ['Pending', 'In Progress', 'Completed'],
-    types: ['W-Cut', 'D-Cut']
+  useEffect(() => {
+    const fetchSalesOrders = async () => {
+      try {
+        const response = await adminService.getSales(filters);
+        console.log(response);
+        setData(response.data); // Update this based on the response structure
+      } catch (error) {
+        toast.error('Failed to load sales orders');
+      }
+    };
+
+    fetchSalesOrders();
+  }, [filters]);
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    onFilterChange(newFilters);
   };
 
-  const filteredOrders = salesOrders.filter(order => {
-    const matchesSearch = order.customerName.toLowerCase().includes(filters.search.toLowerCase()) ||
-                         order.id.toLowerCase().includes(filters.search.toLowerCase());
-    const matchesStatus = filters.status === 'all' || order.status === filters.status;
-    const matchesType = filters.type === 'all' || order.bagType === filters.type;
-
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const handleDelete = async (orderId) => {
+    try {
+      await adminService.deleteSalesOrder(orderId);
+      toast.success('Order deleted successfully');
+      setData((prevData) => prevData.filter((order) => order._id !== orderId)); // Update the list after deletion
+    } catch (error) {
+      toast.error('Failed to delete order');
+    }
+  };
 
   return (
-    <>
-      <FilterBar
-        filters={filters}
-        onFilterChange={setFilters}
-        filterOptions={filterOptions}
-      />
+    <Card>
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>Sales Orders</Typography>
+        <FilterBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          filterOptions={{
+            status: ['pending', 'in_progress', 'completed']
+          }}
+        />
+      </Box>
 
-      <Card>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Order ID</TableCell>
-                <TableCell>Customer Name</TableCell>
-                <TableCell>Job Name</TableCell>
-
-                <TableCell>Bag Type</TableCell>
-                <TableCell>Quantity</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Order ID</TableCell>
+              <TableCell>Customer Name</TableCell>
+              <TableCell>Job Name</TableCell>
+              <TableCell>Bag Type</TableCell>
+              <TableCell>Quantity</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data?.map((order) => (
+              <TableRow key={order._id}>
+                <TableCell>{order.orderId}</TableCell>
+                <TableCell>{order.customerName}</TableCell>
+                <TableCell>{order.jobName}</TableCell>
+                <TableCell>{order.bagDetails.type}</TableCell>
+                <TableCell>{order.quantity}</TableCell>
+                <TableCell>₹{order.totalAmount}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={order.status}
+                    color={order.status === 'Completed' ? 'success' : 'warning'}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleDelete(order._id)}
+                  >
+                    <Delete />
+                  </IconButton>
+                  <IconButton size="small" color="primary">
+                    <QrCode />
+                  </IconButton>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>{order.id}</TableCell>
-                  <TableCell>{order.customerName}</TableCell>
-                  <TableCell>{order.jobName}</TableCell>
-                  <TableCell>{order.bagType}</TableCell>
-                  <TableCell>{order.quantity}</TableCell>
-                  <TableCell>₹{order.totalAmount}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={order.status}
-                      color={order.status === 'Completed' ? 'success' : 'warning'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      <QrCode />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
-
-      <Dialog
-        open={!!selectedOrder}
-        onClose={() => setSelectedOrder(null)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Order QR Code - {selectedOrder?.id}</DialogTitle>
-        <DialogContent sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-          {selectedOrder && (
-            <QRCodeSVG
-              value={JSON.stringify(selectedOrder)}
-              size={256}
-              level="H"
-              includeMargin
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Card>
   );
 }
