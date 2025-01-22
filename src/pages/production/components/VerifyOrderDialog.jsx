@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -10,54 +10,105 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-import { QRCodeSVG } from 'qrcode.react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import toast from 'react-hot-toast';
-
-// Dummy data to simulate QR code scan results
-const dummyQRData = {
-  rollSize: '15x20',
-  gsm: '100',
-  fabricColor: 'Green',
-  bagType: 'W-Cut',
-  printColor: 'Black',
-  cylinderSize: '30x40'
-};
 
 export default function VerifyOrderDialog({ open, onClose, order, onVerifyComplete }) {
   const [scanning, setScanning] = useState(false);
   const [scannedData, setScannedData] = useState(null);
+  const scannerRef = useRef(null);
 
-  const handleScan = () => {
-    setScanning(true);
-    // Simulate scanning delay
-    setTimeout(() => {
+  // Cleanup scanner when dialog closes
+  useEffect(() => {
+    if (!open && scannerRef.current) {
       try {
-        // Simulate successful scan by setting dummy data
-        setScannedData(dummyQRData);
-        toast.success('QR Code scanned successfully');
-        setScanning(false);
+        scannerRef.current.clear().catch(() => {
+          // Ignore cleanup errors
+          console.log('Scanner cleanup completed');
+        });
+        scannerRef.current = null;
       } catch (error) {
-        toast.error('Invalid QR Code. Please try again.');
-        setScanning(false);
+        // Ignore any errors during cleanup
+        console.log('Scanner cleanup completed');
       }
-    }, 1500);
+    }
+  }, [open]);
+
+  const startScanning = () => {
+    setScanning(true);
+    const qrScanner = new Html5QrcodeScanner('qr-reader', {
+      qrbox: {
+        width: 250,
+        height: 250,
+      },
+      fps: 5,
+    });
+
+    scannerRef.current = qrScanner;
+
+    qrScanner.render((decodedText) => {
+      try {
+        const data = JSON.parse(decodedText);
+        // Only keep serializable data
+        const cleanData = {
+          rollSize: data.rollSize || '',
+          gsm: data.gsm || '',
+          fabricColor: data.fabricColor || '',
+          bagType: data.bagType || '',
+          printColor: data.printColor || '',
+          cylinderSize: data.cylinderSize || ''
+        };
+        setScannedData(cleanData);
+        setScanning(false);
+        if (scannerRef.current) {
+          scannerRef.current.clear().catch(console.warn);
+        }
+        toast.success('QR Code scanned successfully');
+      } catch (error) {
+        toast.error('Invalid QR Code format');
+      }
+    }, (error) => {
+      console.warn(`QR Code scan error: ${error}`);
+    });
+  };
+
+  const handleClose = () => {
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.clear().catch(() => {
+          // Ignore cleanup errors
+          console.log('Scanner cleanup completed');
+        });
+        scannerRef.current = null;
+      } catch (error) {
+        // Ignore any errors during cleanup
+        console.log('Scanner cleanup completed');
+      }
+    }
+    setScanning(false);
+    setScannedData(null);
+    onClose();
   };
 
   const handleConfirm = () => {
     if (scannedData) {
       onVerifyComplete(order.id, scannedData);
+      handleClose();
     }
-  };
-
-  const handleClose = () => {
-    setScannedData(null);
-    onClose();
   };
 
   if (!order) return null;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{
+        sx: { minHeight: scanning ? '80vh' : 'auto' }
+      }}
+    >
       <DialogTitle>Verify Order - {order.orderId}</DialogTitle>
       <DialogContent>
         <Grid container spacing={3}>
@@ -77,15 +128,23 @@ export default function VerifyOrderDialog({ open, onClose, order, onVerifyComple
               </Typography>
             </Box>
 
-            {/* <Typography variant="subtitle2" gutterBottom>
-              Scan QR Code
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-              <QRCodeSVG
-                value={JSON.stringify(dummyQRData)}
-                size={200}
-              />
-            </Box> */}
+            {scanning && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Scan QR Code
+                </Typography>
+                <Box 
+                  id="qr-reader" 
+                  sx={{ 
+                    width: '100%',
+                    '& video': {
+                      width: '100% !important',
+                      borderRadius: '8px'
+                    }
+                  }}
+                />
+              </Box>
+            )}
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -153,13 +212,15 @@ export default function VerifyOrderDialog({ open, onClose, order, onVerifyComple
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          onClick={handleScan}
-          disabled={scanning}
-        >
-          {scanning ? 'Scanning...' : 'Scan QR Code'}
-        </Button>
+        {!scanning && !scannedData && (
+          <Button
+            variant="contained"
+            onClick={startScanning}
+            color="primary"
+          >
+            Start Scanner
+          </Button>
+        )}
         {scannedData && (
           <Button
             variant="contained"

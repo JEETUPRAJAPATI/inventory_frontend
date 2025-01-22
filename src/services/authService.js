@@ -4,7 +4,6 @@ import { API_BASE_URL } from '../config/constants';
 const authService = {
   login: async (credentials) => {
     try {
-      // API response handling
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -16,17 +15,23 @@ const authService = {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || 'Invalid credentials');
       }
 
       // Store token and user data
-      storage.set(StorageKeys.TOKEN, data.token);
-      storage.set(StorageKeys.USER, JSON.stringify(data.user));
+      if (data.token) {
+        storage.set(StorageKeys.TOKEN, data.token);
+      }
+      
+      if (data.user) {
+        storage.set(StorageKeys.USER, JSON.stringify(data.user));
+      }
       
       return data;
     } catch (error) {
-      console.error('Login error:', error);
-      throw new Error(error.message || 'Login failed');
+      // Ensure error has a message property
+      const errorMessage = error.message || 'Login failed. Please try again.';
+      throw new Error(errorMessage);
     }
   },
 
@@ -36,18 +41,28 @@ const authService = {
       return userStr ? JSON.parse(userStr) : null;
     } catch (error) {
       console.error('Error getting current user:', error);
+      storage.remove(StorageKeys.USER); // Clear invalid data
       return null;
     }
   },
 
-  getToken: () => storage.get(StorageKeys.TOKEN),
+  getToken: () => {
+    const token = storage.get(StorageKeys.TOKEN);
+    return token || null;
+  },
 
   logout: () => {
     storage.remove(StorageKeys.TOKEN);
     storage.remove(StorageKeys.USER);
+    // Clear any other auth-related data
+    storage.remove('lastLoginTime');
   },
 
-  isAuthenticated: () => !!storage.get(StorageKeys.TOKEN),
+  isAuthenticated: () => {
+    const token = storage.get(StorageKeys.TOKEN);
+    const user = storage.get(StorageKeys.USER);
+    return !!(token && user);
+  },
 };
 
 export default authService;

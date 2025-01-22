@@ -18,46 +18,48 @@ import {
 import { QrCodeScanner, Update, LocalShipping, Print, Receipt } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
-import VerifyOrderDialog from './VerifyOrderDialog';
+import QRCodeScanner from '../../../components/QRCodeScanner';
 
 export default function BagMakingOrderList({ status = 'pending', bagType }) {
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [showScanner, setShowScanner] = useState(false);
   const [confirmBillingOpen, setConfirmBillingOpen] = useState(false);
   const [orderToBill, setOrderToBill] = useState(null);
+
+  const handleVerify = (orderId) => {
+    if (orders.some((o) => o.status === 'in_progress')) {
+      toast.error('A job is already active. Please complete or deactivate it before starting a new one.');
+      return;
+    }
+    setSelectedOrderId(orderId);
+    setShowScanner(true);
+  };
+
+  const handleScanSuccess = (data) => {
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === selectedOrderId
+          ? { ...order, ...data, status: 'in_progress' }
+          : order
+      )
+    );
+    setShowScanner(false);
+    setSelectedOrderId(null);
+    toast.success('Order verified and marked as active');
+  };
 
   const getStatusColor = (status) => {
     const colors = {
       pending: 'warning',
       in_progress: 'info',
-      completed: 'success'
+      completed: 'success',
     };
     return colors[status] || 'default';
   };
 
-  const handleVerify = (order) => {
-    if (orders.some(o => o.status === 'in_progress') && order.status === 'pending') {
-      toast.error('A job is already active. Please complete or deactivate it before starting a new one.');
-      return;
-    }
-    setSelectedOrder(order);
-    setVerifyDialogOpen(true);
-  };
-
-  const handleVerifyComplete = (orderId, verifiedData) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, ...verifiedData, status: 'in_progress' } : order
-      )
-    );
-    setVerifyDialogOpen(false);
-    setSelectedOrder(null);
-    toast.success('Order verified and marked as active');
-  };
-
   const handleStartPrinting = (orderId) => {
-    if (orders.some(o => o.status === 'in_progress')) {
+    if (orders.some((o) => o.status === 'in_progress')) {
       toast.error('A job is already active. Please complete it first.');
       return;
     }
@@ -95,7 +97,7 @@ export default function BagMakingOrderList({ status = 'pending', bagType }) {
 
   const renderActions = (order) => {
     if (bagType === 'wcut') {
-      // W-Cut actions (same as Opsert)
+      // W-Cut actions
       switch (order.status) {
         case 'pending':
           return (
@@ -137,7 +139,7 @@ export default function BagMakingOrderList({ status = 'pending', bagType }) {
           return null;
       }
     } else {
-      // D-Cut actions (same as Flexo)
+      // D-Cut actions
       switch (order.status) {
         case 'pending':
           return (
@@ -155,7 +157,7 @@ export default function BagMakingOrderList({ status = 'pending', bagType }) {
                 startIcon={<QrCodeScanner />}
                 variant="outlined"
                 size="small"
-                onClick={() => handleVerify(order)}
+                onClick={() => handleVerify(order.id)}
               >
                 Verify
               </Button>
@@ -206,94 +208,90 @@ export default function BagMakingOrderList({ status = 'pending', bagType }) {
 
   return (
     <>
-      <Card>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Order ID</TableCell>
-                <TableCell>Job Name</TableCell>
-                <TableCell>Bag Type</TableCell>
-                <TableCell>Fabric Type</TableCell>
-                <TableCell>GSM</TableCell>
-                <TableCell>Fabric Color</TableCell>
-                <TableCell>Bag Size</TableCell>
-                <TableCell>Quantity</TableCell>
-                <TableCell>Remarks</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>{order.orderId}</TableCell>
-                  <TableCell>{order.jobName}</TableCell>
-                  <TableCell>{order.bagType}</TableCell>
-                  <TableCell>{order.fabricType || '-'}</TableCell>
-                  <TableCell>{order.gsm}</TableCell>
-                  <TableCell>{order.fabricColor}</TableCell>
-                  <TableCell>{order.bagSize}</TableCell>
-                  <TableCell>{order.quantity}</TableCell>
-                  <TableCell>{order.remarks || '-'}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={order.status.replace('_', ' ').toUpperCase()}
-                      color={getStatusColor(order.status)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {renderActions(order)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
-
-      {bagType === 'dcut' && (
-        <>
-          <VerifyOrderDialog
-            open={verifyDialogOpen}
-            onClose={() => setVerifyDialogOpen(false)}
-            order={selectedOrder}
-            onVerifyComplete={handleVerifyComplete}
+      {showScanner ? (
+        <Card sx={{ p: 2 }}>
+          <QRCodeScanner 
+            onScanSuccess={handleScanSuccess} 
           />
-
-          <Dialog
-            open={confirmBillingOpen}
-            onClose={() => setConfirmBillingOpen(false)}
-          >
-            <DialogTitle>Confirm Direct Billing</DialogTitle>
-            <DialogContent>
-              <Typography>
-                Are you sure you want to move this order to billing?
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Order ID: {orderToBill?.orderId}<br />
-                Job Name: {orderToBill?.jobName}
-              </Typography>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setConfirmBillingOpen(false)}>Cancel</Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleConfirmBilling}
-              >
-                Confirm
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </>
+        </Card>
+      ) : (
+        <Card>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Order ID</TableCell>
+                  <TableCell>Job Name</TableCell>
+                  <TableCell>Bag Type</TableCell>
+                  <TableCell>Fabric Type</TableCell>
+                  <TableCell>GSM</TableCell>
+                  <TableCell>Fabric Color</TableCell>
+                  <TableCell>Bag Size</TableCell>
+                  <TableCell>Quantity</TableCell>
+                  <TableCell>Remarks</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell>{order.orderId}</TableCell>
+                    <TableCell>{order.jobName}</TableCell>
+                    <TableCell>{order.bagType}</TableCell>
+                    <TableCell>{order.fabricType || '-'}</TableCell>
+                    <TableCell>{order.gsm}</TableCell>
+                    <TableCell>{order.fabricColor}</TableCell>
+                    <TableCell>{order.bagSize}</TableCell>
+                    <TableCell>{order.quantity}</TableCell>
+                    <TableCell>{order.remarks || '-'}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.status.replace('_', ' ').toUpperCase()}
+                        color={getStatusColor(order.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {renderActions(order)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Card>
       )}
+
+      <Dialog
+        open={confirmBillingOpen}
+        onClose={() => setConfirmBillingOpen(false)}
+      >
+        <DialogTitle>Confirm Direct Billing</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to move this order to billing?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Order ID: {orderToBill?.orderId}<br />
+            Job Name: {orderToBill?.jobName}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmBillingOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleConfirmBilling}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
 
-// Mock data for testing
 const mockOrders = [
   {
     id: 'BAG-001',
