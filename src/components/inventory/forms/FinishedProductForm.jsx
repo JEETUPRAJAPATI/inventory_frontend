@@ -57,7 +57,7 @@ export default function FinishedProductForm({ open, onClose, onSubmit, product =
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>
-          {product ? 'Edit Product' : 'Add Product'}
+          {'Edit Product'}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>

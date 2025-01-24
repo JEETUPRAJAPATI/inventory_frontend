@@ -3,6 +3,7 @@ export const menuConfigs = {
     { title: 'Dashboard', path: '/admin/dashboard', icon: 'Dashboard' },
     { title: 'User Management', path: '/admin/users', icon: 'People' },
     { title: 'Role Management', path: '/admin/roles', icon: 'Security' },
+    { title: 'Delivery', path: '/admin/delivery', icon: 'ShoppingCart' },
     { title: 'Sales', path: '/admin/sales', icon: 'ShoppingCart' },
     { title: 'flexo', path: '/admin/flexo', icon: 'Assessment' },
     { title: 'w-cut Bag Making', path: '/admin/wcut', icon: 'Assessment' },

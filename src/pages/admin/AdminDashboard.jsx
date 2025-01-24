@@ -3,7 +3,7 @@ import SummaryCard from '../../components/dashboard/SummaryCard';
 import ProductionOverview from '../../components/admin/ProductionOverview';
 import InventoryOverview from '../../components/admin/InventoryOverview';
 import RecentOrders from '../../components/sales/dashboard/RecentOrders';
-import DeliveryList from '../../components/delivery/DeliveryList';
+import DeliveryList from '../../components/admin/RecentDelivery';
 
 export default function AdminDashboard() {
   return (

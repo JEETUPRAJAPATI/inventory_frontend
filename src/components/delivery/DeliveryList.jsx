@@ -78,7 +78,6 @@ export default function DeliveryList() {
     <>
       <Card>
         <Box sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Delivery Management</Typography>
           <DeliveryFilters
             filters={filters}
             onFilterChange={setFilters}
@@ -127,23 +126,16 @@ export default function DeliveryList() {
 
                       {delivery.status === 'Pending' && (
                         <>
-                          <IconButton
+                          <Button
                             size="small"
-                            color="success"
+                            variant="contained"
+                            color="primary"
                             onClick={() => handleStatusUpdate(delivery._id, 'In Transit')}
                           >
-                            <CheckCircle />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleStatusUpdate(delivery._id, 'Cancelled')}
-                          >
-                            <Cancel />
-                          </IconButton>
+                            Start Delivery
+                          </Button>
                         </>
                       )}
-
                       {delivery.status === 'In Transit' && (
                         <Button
                           size="small"

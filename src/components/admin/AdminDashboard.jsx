@@ -1,7 +1,7 @@
 import { Grid } from '@mui/material';
 import SummaryCard from '../dashboard/SummaryCard';
 import RecentOrders from '../sales/dashboard/RecentOrders';
-import DeliveryList from '../delivery/DeliveryList';
+import DeliveryList from './RecentDelivery';
 import ProductionOverview from './ProductionOverview';
 import InventoryOverview from './InventoryOverview';
 

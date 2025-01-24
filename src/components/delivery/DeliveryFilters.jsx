@@ -1,4 +1,4 @@
-import { Box, TextField, MenuItem } from '@mui/material';
+import { Box, TextField, MenuItem, Button } from '@mui/material';
 
 export default function DeliveryFilters({ filters, onFilterChange }) {
   const handleChange = (e) => {
@@ -39,6 +39,16 @@ export default function DeliveryFilters({ filters, onFilterChange }) {
         <MenuItem value="week">This Week</MenuItem>
         <MenuItem value="month">This Month</MenuItem>
       </TextField>
+      <Button
+        variant="outlined"
+        onClick={() => onFilterChange({
+          search: '',
+          status: 'all',
+          type: 'all'
+        })}
+      >
+        Reset
+      </Button>
     </Box>
   );
 }

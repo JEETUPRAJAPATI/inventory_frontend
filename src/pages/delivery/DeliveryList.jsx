@@ -12,12 +12,6 @@ export default function DeliveryList() {
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
-        <DeliveryFilters 
-          filters={filters}
-          onFilterChange={setFilters}
-        />
-      </Grid>
-      <Grid item xs={12}>
         <DeliveryListTable filters={filters} />
       </Grid>
     </Grid>

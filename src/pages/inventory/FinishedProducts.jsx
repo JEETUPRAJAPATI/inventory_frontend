@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Grid,
   Card,
   Table,
   TableBody,
@@ -10,47 +9,38 @@ import {
   TableRow,
   IconButton,
   Typography,
-  Button,
   Chip,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import FinishedProductForm from '../../components/inventory/forms/FinishedProductForm';
 import DeleteConfirmDialog from '../../components/common/DeleteConfirmDialog';
 import toast from 'react-hot-toast';
-
-const mockProducts = [
-  {
-    id: 1,
-    name: 'Premium Shopping Bag',
-    category: 'shopping_bag',
-    quantity: 500,
-    size: '12x15x4',
-    color: 'Blue',
-    price: 25.00,
-    status: 'available',
-  },
-  {
-    id: 2,
-    name: 'Luxury Gift Bag',
-    category: 'gift_bag',
-    quantity: 200,
-    size: '10x12x3',
-    color: 'Red',
-    price: 35.00,
-    status: 'low_stock',
-  },
-];
+import productService from '../../services/productService';
 
 export default function FinishedProducts() {
+  const [products, setProducts] = useState([]);  // Holds the list of products
   const [formOpen, setFormOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);  // To track loading state
 
-  const handleAdd = () => {
-    setSelectedProduct(null);
-    setFormOpen(true);
-  };
+  // Fetch the list of products when the component mounts
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await productService.getProducts();
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        toast.error('Failed to load products');
+        setProducts([]);  // Fallback to an empty array on error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const handleEdit = (product) => {
     setSelectedProduct(product);
@@ -62,14 +52,41 @@ export default function FinishedProducts() {
     setDeleteDialogOpen(true);
   };
 
-  const handleFormSubmit = (formData) => {
-    toast.success(selectedProduct ? 'Product updated successfully' : 'Product added successfully');
-    setFormOpen(false);
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (selectedProduct) {
+        // Update product
+        await productService.updateProduct(selectedProduct.id, formData);
+        toast.success('Product updated successfully');
+      } else {
+        // Add new product
+        await productService.addProduct(formData);
+        toast.success('Product added successfully');
+      }
+      setFormOpen(false);
+      // Re-fetch products after update or add
+      const response = await productService.getProducts();
+      if (Array.isArray(response)) {
+        setProducts(response);
+      }
+    } catch (error) {
+      toast.error('Failed to save product');
+    }
   };
 
-  const handleDeleteConfirm = () => {
-    toast.success('Product deleted successfully');
-    setDeleteDialogOpen(false);
+  const handleDeleteConfirm = async () => {
+    try {
+      await productService.deleteProduct(productToDelete.id);  // Call API to delete product
+      toast.success('Product deleted successfully');
+      setDeleteDialogOpen(false);
+      // Re-fetch products after deletion
+      const response = await productService.getProducts();
+      if (Array.isArray(response)) {
+        setProducts(response);
+      }
+    } catch (error) {
+      toast.error('Failed to delete product');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -81,19 +98,22 @@ export default function FinishedProducts() {
     return colors[status] || 'default';
   };
 
+  if (loading) {
+    return <Typography variant="h6">Loading products...</Typography>;
+  }
+
   return (
     <>
       <Card>
         <div className="flex justify-between items-center p-4">
           <Typography variant="h6">Finished Products</Typography>
-          <Button
-            variant="contained"
+          <IconButton
             color="primary"
-            startIcon={<Add />}
-            onClick={handleAdd}
+            onClick={() => setFormOpen(true)}
+            aria-label="add-product"
           >
-            Add Product
-          </Button>
+            <Add />
+          </IconButton>
         </div>
         <TableContainer>
           <Table>
@@ -110,10 +130,10 @@ export default function FinishedProducts() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockProducts.map((product) => (
+              {products.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.category.replace('_', ' ')}</TableCell>
+                  <TableCell>{product.category}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
                   <TableCell>{product.size}</TableCell>
                   <TableCell>{product.color}</TableCell>

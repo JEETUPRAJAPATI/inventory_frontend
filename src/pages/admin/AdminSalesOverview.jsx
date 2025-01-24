@@ -13,11 +13,11 @@ import {
   Chip,
   TextField,
   Box,
+  MenuItem,
 } from '@mui/material';
-import { Delete } from '@mui/icons-material';
+import { Delete, Search } from '@mui/icons-material';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
-import SummaryCard from '../../components/dashboard/SummaryCard';
 
 export default function AdminSalesOverview() {
   const [orders, setOrders] = useState([]);
@@ -25,7 +25,7 @@ export default function AdminSalesOverview() {
   const [filters, setFilters] = useState({
     search: '',
     status: '',
-    type: 'all'
+    type: 'all',
   });
 
   const fetchOrders = async () => {
@@ -33,10 +33,10 @@ export default function AdminSalesOverview() {
       setLoading(true);
       const response = await adminService.getSales(filters);
       console.log('Sales response:', response); // Debug log
-      setOrders(response.data || []);
+      setOrders(response?.data || []);
     } catch (error) {
       console.error('Error fetching sales:', error); // Debug log
-      toast.error(error.message);
+      toast.error('Error fetching sales data');
       setOrders([]);
     } finally {
       setLoading(false);
@@ -49,9 +49,9 @@ export default function AdminSalesOverview() {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -61,79 +61,55 @@ export default function AdminSalesOverview() {
       toast.success('Order deleted successfully');
       fetchOrders();
     } catch (error) {
-      toast.error(error.message);
+      toast.error('Error deleting order');
     }
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      search: '',
+      status: '',
+      type: 'all',
+    });
   };
 
   // Calculate summary metrics
   const totalOrders = orders.length;
-  const pendingOrders = orders.filter(order => order.status === 'pending').length;
-  const completedOrders = orders.filter(order => order.status === 'completed').length;
+  const pendingOrders = orders.filter((order) => order.status === 'pending').length;
+  const completedOrders = orders.filter((order) => order.status === 'completed').length;
   const totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>Sales Overview</Typography>
+    <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search..."
+          name="search"
+          value={filters.search}
+          onChange={handleFilterChange}
+          InputProps={{
+            startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />,
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          name="status"
+          value={filters.type}
+          onChange={handleFilterChange}
+          sx={{ minWidth: 120 }}
+        >
+          <MenuItem value="all">All Types</MenuItem>
+          <MenuItem value="pending">Pending</MenuItem>
+          <MenuItem value="in_progress">In Progress</MenuItem>
+          <MenuItem value="completed">Completed</MenuItem>
+        </TextField>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Total Orders"
-            value={totalOrders}
-            color="primary"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Pending Orders"
-            value={pendingOrders}
-            color="warning"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Completed Orders"
-            value={completedOrders}
-            color="success"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Total Amount"
-            value={`₹${totalAmount.toLocaleString()}`}
-            color="info"
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            label="Search"
-            name="search"
-            value={filters.search}
-            onChange={handleFilterChange}
-            placeholder="Search by order ID or customer name"
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            select
-            label="Status"
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            SelectProps={{ native: true }}
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </TextField>
-        </Grid>
-      </Grid>
+        <Button variant="outlined" onClick={handleResetFilters}>
+          Reset
+        </Button>
+      </Box>
 
       <Card>
         <TableContainer>
@@ -156,29 +132,32 @@ export default function AdminSalesOverview() {
                   <TableCell>Quantity</TableCell>
                   <TableCell>Amount</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
+                  {/* <TableCell>Action</TableCell> */}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order._id}>
                     <TableCell>{order.orderId}</TableCell>
-                    <TableCell>{order.customerName}</TableCell>
-                    <TableCell>{order.jobName}</TableCell>
-                    <TableCell>{order.bagDetails?.type}</TableCell>
-                    <TableCell>{order.quantity}</TableCell>
-                    <TableCell>₹{order.totalAmount?.toLocaleString()}</TableCell>
+                    <TableCell>{order.customerName || 'N/A'}</TableCell>
+                    <TableCell>{order.jobName || 'N/A'}</TableCell>
+                    <TableCell>{order.bagDetails?.type || 'N/A'}</TableCell>
+                    <TableCell>{order.quantity || '0'}</TableCell>
+                    <TableCell>₹{order.totalAmount?.toLocaleString() || '0'}</TableCell>
                     <TableCell>
                       <Chip
-                        label={order.status.toUpperCase()}
+                        label={order.status?.toUpperCase() || 'UNKNOWN'}
                         color={
-                          order.status === 'completed' ? 'success' :
-                          order.status === 'in_progress' ? 'warning' : 'default'
+                          order.status === 'completed'
+                            ? 'success'
+                            : order.status === 'in_progress'
+                              ? 'warning'
+                              : 'default'
                         }
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Button
                         size="small"
                         color="error"
@@ -187,7 +166,7 @@ export default function AdminSalesOverview() {
                       >
                         Delete
                       </Button>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>

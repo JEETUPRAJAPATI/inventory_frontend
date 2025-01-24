@@ -1,6 +1,6 @@
 import { Grid } from '@mui/material';
 import SummaryCard from '../../components/dashboard/SummaryCard';
-import DeliveryList from '../../components/delivery/DeliveryList';
+import DeliveryList from '../../components/delivery/RecentDelivery';
 
 export default function DeliveryDashboard() {
   return (
