@@ -12,18 +12,21 @@ import {
   Typography,
   Chip,
   TextField,
+  MenuItem,
   Grid,
+
 } from '@mui/material';
 import { Print, Update, LocalShipping } from '@mui/icons-material';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
 
+import { Delete, Search } from '@mui/icons-material';
 export default function DCutBagMakingPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
-    status: '',
+    status: 'all',
     page: 1,
     limit: 10
   });
@@ -45,6 +48,12 @@ export default function DCutBagMakingPage() {
     fetchOrders();
   }, [filters]);
 
+  const handleReset = () => {
+    setFilters({
+      search: '',
+      type: '',
+    });
+  };
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -76,35 +85,36 @@ export default function DCutBagMakingPage() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>D-Cut Bag Making Production</Typography>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search..."
+          name="search"
+          value={filters.search}
+          onChange={handleFilterChange}
+          InputProps={{
+            startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />,
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          name="status"
+          value={filters.type}
+          onChange={handleFilterChange}
+          sx={{ minWidth: 120 }}
+        >
+          <MenuItem value="all">All Types</MenuItem>
+          <MenuItem value="pending">Pending</MenuItem>
+          <MenuItem value="in_progress">In Progress</MenuItem>
+          <MenuItem value="completed">Completed</MenuItem>
+        </TextField>
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            label="Search"
-            name="search"
-            value={filters.search}
-            onChange={handleFilterChange}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            select
-            label="Status"
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            SelectProps={{ native: true }}
-          >
-            <option value="">All</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </TextField>
-        </Grid>
-      </Grid>
+        <Button variant="outlined" onClick={handleReset}>
+          Reset
+        </Button>
+      </Box>
+
 
       <Card>
         <TableContainer>

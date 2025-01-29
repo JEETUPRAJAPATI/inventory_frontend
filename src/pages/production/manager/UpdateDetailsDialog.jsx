@@ -1,16 +1,9 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid,
-} from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import productionService from '/src/services/productionManagerService.js';
 
-export default function UpdateDetailsDialog({ open, onClose, record, type }) {
+export default function UpdateDetailsDialog({ open, onClose, record, type, orderId }) {
   const [formData, setFormData] = useState({
     roll_size: '',
     cylinder_size: '',
@@ -19,17 +12,18 @@ export default function UpdateDetailsDialog({ open, onClose, record, type }) {
     remarks: '',
   });
 
+  // Fetch the order details when the record is updated
   useEffect(() => {
     if (record) {
       setFormData({
-        roll_size: record.roll_size || '',
-        cylinder_size: record.cylinder_size || '',
-        quantity_kgs: record.quantity_kgs || '',
-        quantity_rolls: record.quantity_rolls || '',
+        roll_size: record.production_details?.roll_size || '',
+        cylinder_size: record.production_details?.cylinder_size || '',
+        quantity_kgs: record.production_details?.quantity_kgs || '',
+        quantity_rolls: record.production_details?.quantity_rolls || '',
         remarks: record.remarks || '',
       });
     }
-  }, [record]);
+  }, [record]); // Only run when the record changes
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,11 +33,17 @@ export default function UpdateDetailsDialog({ open, onClose, record, type }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add API call here to update the record
-    toast.success('Record updated successfully');
-    onClose();
+    try {
+      // Assuming the record._id and orderId are correct, and passing formData for update
+      const updatedRecord = await productionService.updateProductionRecord(record._id, formData, orderId);
+      toast.success('Record updated successfully');
+      onClose(); // Close the dialog after success
+    } catch (error) {
+      console.error('Error updating record:', error);
+      toast.error('Failed to update record');
+    }
   };
 
   return (
