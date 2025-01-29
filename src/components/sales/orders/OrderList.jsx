@@ -180,13 +180,7 @@ export default function OrderList() {
                     >
                       <Delete />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleShowQR(order)}
-                    >
-                      <QrCode />
-                    </IconButton>
+
                   </TableCell>
                 </TableRow>
               ))}

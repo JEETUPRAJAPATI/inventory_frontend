@@ -71,11 +71,37 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">
+                Driver Name
+              </Typography>
+              <Typography variant="body1" fontWeight="bold">
+                {delivery.data.driverName || 'N/A'}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">
+                Driver Mobile
+              </Typography>
+              <Typography variant="body1" fontWeight="bold">
+                {delivery.data.driverContact || 'N/A'}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">
+                Vehicle Number
+              </Typography>
+              <Typography variant="body1" fontWeight="bold">
+                {delivery.data.vehicleNo || 'N/A'}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">
                 Delivery Date
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {delivery.data.delivery_date
-                  ? new Date(delivery.data.delivery_date).toLocaleDateString()
+                {delivery.data.deliveryDate
+                  ? new Date(delivery.data.deliveryDate).toLocaleDateString()
                   : 'N/A'}
               </Typography>
             </Grid>

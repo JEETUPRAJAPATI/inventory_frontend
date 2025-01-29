@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -13,31 +13,36 @@ import {
   Box,
 } from '@mui/material';
 import { PictureAsPdf, Print } from '@mui/icons-material';
-import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import toast from 'react-hot-toast';
+import { generateInvoicePDF } from '../../utils/pdfGenerator';
+import invoiceService from '../../services/invoiceService'; // Assuming you have an API service for invoices
 
-const mockInvoices = [
-  {
-    id: 'INV-001',
-    orderId: 'ORD-001',
-    customerName: 'John Doe',
-    amount: 15000,
-    date: '2024-02-20',
-    status: 'pending',
-    gstNumber: 'GST123456789'
-  },
-  {
-    id: 'INV-002',
-    orderId: 'ORD-002',
-    customerName: 'Jane Smith',
-    amount: 25000,
-    date: '2024-02-19',
-    status: 'paid',
-    gstNumber: 'GST987654321'
-  }
-];
+const InvoiceManagement = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-export default function InvoiceManagement() {
+  // Fetch invoices on component mount
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const response = await invoiceService.getInvoices(); // Assuming `invoiceService.getInvoices()` fetches the invoices
+        console.log(response.data);
+        setInvoices(response.data);
+      } catch (error) {
+        console.error('Error fetching invoices:', error);
+        toast.error('Failed to load invoices');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInvoices();
+  }, []);
+
+  // Handle downloading PDF for an invoice
   const handleDownloadPDF = (invoice) => {
     try {
       generateInvoicePDF({
@@ -45,7 +50,7 @@ export default function InvoiceManagement() {
         invoiceNumber: invoice.id,
         subtotal: invoice.amount,
         gst: invoice.amount * 0.18,
-        total: invoice.amount * 1.18
+        total: invoice.amount * 1.18,
       });
       toast.success('Invoice downloaded successfully');
     } catch (error) {
@@ -53,10 +58,81 @@ export default function InvoiceManagement() {
     }
   };
 
+  // Handle adding new invoice
+  const handleAddInvoice = () => {
+    setSelectedInvoice(null);
+    setFormOpen(true);
+  };
+
+  // Handle editing an existing invoice
+  const handleEditInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setFormOpen(true);
+  };
+
+  // Handle deleting an invoice
+  const handleDeleteInvoice = (invoice) => {
+    setInvoiceToDelete(invoice);
+    setDeleteDialogOpen(true);
+  };
+
+  // Handle form submission for adding/editing invoice
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (selectedInvoice) {
+        await invoiceService.updateInvoice(selectedInvoice._id, formData);
+        toast.success('Invoice updated successfully');
+      } else {
+        await invoiceService.createInvoice(formData);
+        toast.success('Invoice created successfully');
+      }
+      setFormOpen(false);
+      refreshInvoices();
+    } catch (error) {
+      toast.error('Failed to save invoice');
+    }
+  };
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    try {
+      await invoiceService.deleteInvoice(invoiceToDelete._id);
+      toast.success('Invoice deleted successfully');
+      setDeleteDialogOpen(false);
+      refreshInvoices();
+    } catch (error) {
+      toast.error('Failed to delete invoice');
+    }
+  };
+
+  // Refresh the invoices after any CRUD operation
+  const refreshInvoices = async () => {
+    setLoading(true);
+    try {
+      const response = await invoiceService.getInvoices();
+      setInvoices(response.data);
+    } catch (error) {
+      console.error('Error refreshing invoices:', error);
+      toast.error('Failed to refresh invoices');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const getStatusColor = (status) => {
+    const colors = {
+      Paid: 'success',       // Green for Paid
+      Pending: 'warning',    // Yellow for Pending
+      Cancelled: 'error',    // Red for Cancelled
+    };
+    return colors[status.toLowerCase()] || 'default'; // Default color if status doesn't match
+  };
+
   return (
     <Card>
       <Box sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>Invoice Management</Typography>
+        <Typography variant="h6" gutterBottom>
+          Invoice Management
+        </Typography>
         <TableContainer>
           <Table>
             <TableHead>
@@ -71,17 +147,23 @@ export default function InvoiceManagement() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockInvoices.map((invoice) => (
+              {invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell>{invoice.id}</TableCell>
-                  <TableCell>{invoice.orderId}</TableCell>
-                  <TableCell>{invoice.customerName}</TableCell>
+                  <TableCell>{invoice.order_id}</TableCell>
+                  <TableCell>{invoice.invoice_id}</TableCell>
+                  <TableCell>{invoice.customer}</TableCell>
                   <TableCell>₹{invoice.amount}</TableCell>
-                  <TableCell>{invoice.date}</TableCell>
+                  <TableCell>
+                    {new Intl.DateTimeFormat('en-GB', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    }).format(new Date(invoice.date))}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={invoice.status.toUpperCase()}
-                      color={invoice.status === 'paid' ? 'success' : 'warning'}
+                      color={getStatusColor(invoice.status)}
                       size="small"
                     />
                   </TableCell>
@@ -100,6 +182,20 @@ export default function InvoiceManagement() {
                     >
                       <Print />
                     </IconButton>
+                    <IconButton
+                      size="small"
+                      color="secondary"
+                      onClick={() => handleEditInvoice(invoice)}
+                    >
+                      {/* Edit icon */}
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteInvoice(invoice)}
+                    >
+                      {/* Delete icon */}
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -109,4 +205,6 @@ export default function InvoiceManagement() {
       </Box>
     </Card>
   );
-}
+};
+
+export default InvoiceManagement;

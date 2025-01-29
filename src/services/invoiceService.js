@@ -1,45 +1,42 @@
 // src/services/productService.js
 
-import axios from 'axios';
-import api from './api';
+import api from './api'; // Axios instance with predefined interceptors
 
-// Define the base URL for API calls
-const API_URL = '/inventory/finished-products'; // You should adjust this to the actual endpoint
+const API_URL = '/inventory/invoices'; // Base endpoint for purchase orders
 
-// Function to fetch all products
-const getProducts = async (filters = {}) => {
+// Fetch all products with optional filters
+const getInvoices = async (filters = {}) => {
     try {
-
-        const response = await api.get(API_URL);
-        // console.log('data', response.data);
-        return response.data;
+        const queryString = new URLSearchParams(filters).toString(); // Convert filters to query string
+        const response = await api.get(`${API_URL}?${queryString}`);
+        return response.data; // Return the data payload
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Error fetching products');
     }
 };
 
-// Function to fetch a single product by ID
+// Fetch a single product by ID
 const getProductById = async (productId) => {
     try {
-        const response = await axios.get(`${API_URL}/${productId}`);
+        const response = await api.get(`${API_URL}/${productId}`);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Error fetching product');
     }
 };
 
-// Function to add a new product
+// Add a new product
 const addProduct = async (productData) => {
     try {
-        const response = await axios.post(API_URL, productData);
+        const response = await api.post(API_URL, productData);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Error adding product');
     }
 };
 
-// Function to update an existing product
-const updateProduct = async (productId, productData) => {
+// Update an existing product by ID
+const updateOrder = async (productId, productData) => {
     try {
         const response = await api.put(`${API_URL}/${productId}`, productData);
         return response.data;
@@ -48,8 +45,8 @@ const updateProduct = async (productId, productData) => {
     }
 };
 
-// Function to delete a product
-const deleteProduct = async (productId) => {
+// Delete a product by ID
+const deleteOrder = async (productId) => {
     try {
         const response = await api.delete(`${API_URL}/${productId}`);
         return response.data;
@@ -59,9 +56,9 @@ const deleteProduct = async (productId) => {
 };
 
 export default {
-    getProducts,
+    getInvoices,
     getProductById,
     addProduct,
-    updateProduct,
-    deleteProduct,
+    updateOrder,
+    deleteOrder,
 };

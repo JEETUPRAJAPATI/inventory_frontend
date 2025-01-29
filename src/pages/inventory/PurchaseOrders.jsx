@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Grid,
   Card,
@@ -13,67 +13,91 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import { Add, Edit, Delete, Visibility } from '@mui/icons-material';
+import { Add, Edit, Delete } from '@mui/icons-material';
 import PurchaseOrderForm from '../../components/inventory/forms/PurchaseOrderForm';
 import DeleteConfirmDialog from '../../components/common/DeleteConfirmDialog';
 import toast from 'react-hot-toast';
-
-const mockOrders = [
-  {
-    id: 1,
-    orderNumber: 'PO-2024-001',
-    supplier: 'ABC Fabrics',
-    materialType: 'fabric',
-    quantity: 1000,
-    unitPrice: 45.50,
-    totalAmount: 45500,
-    deliveryDate: '2024-03-15',
-    status: 'pending',
-    notes: 'Urgent order for upcoming production',
-  },
-  {
-    id: 2,
-    orderNumber: 'PO-2024-002',
-    supplier: 'XYZ Materials',
-    materialType: 'handle',
-    quantity: 500,
-    unitPrice: 25.75,
-    totalAmount: 12875,
-    deliveryDate: '2024-03-20',
-    status: 'approved',
-    notes: 'Regular monthly order',
-  },
-];
+import purchaseOrderService from '../../services/purchaseOrderService'; // Assumed service file for API calls
 
 export default function PurchaseOrders() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await purchaseOrderService.getOrders();
+        console.log('response',response.data)
+        setOrders(response.data);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        toast.error('Failed to load purchase orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
 
-  const handleAdd = () => {
+  const handleAddOrder = () => {
     setSelectedOrder(null);
     setFormOpen(true);
   };
 
-  const handleEdit = (order) => {
+  const handleEditOrder = (order) => {
+    console.log(order);
     setSelectedOrder(order);
     setFormOpen(true);
   };
 
-  const handleDelete = (order) => {
+  const handleDeleteOrder = (order) => {
     setOrderToDelete(order);
     setDeleteDialogOpen(true);
   };
 
-  const handleFormSubmit = (formData) => {
-    toast.success(selectedOrder ? 'Order updated successfully' : 'Order created successfully');
-    setFormOpen(false);
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (selectedOrder) {
+        console.log('form data',formData);
+        console.log('od',selectedOrder.id);
+        await purchaseOrderService.updateOrder(selectedOrder._id, formData);
+        toast.success('Purchase order updated successfully');
+      } else {
+        await purchaseOrderService.createOrder(formData);
+        toast.success('Purchase order created successfully');
+      }
+      setFormOpen(false);
+      refreshOrders();
+    } catch (error) {
+      toast.error('Failed to save purchase order');
+    }
   };
 
-  const handleDeleteConfirm = () => {
-    toast.success('Order deleted successfully');
-    setDeleteDialogOpen(false);
+  const handleDeleteConfirm = async () => {
+    try {
+      await purchaseOrderService.deleteOrder(orderToDelete._id);
+      toast.success('Purchase order deleted successfully');
+      setDeleteDialogOpen(false);
+      refreshOrders();
+    } catch (error) {
+      toast.error('Failed to delete purchase order');
+    }
+  };
+
+  const refreshOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await purchaseOrderService.getOrders();
+      setOrders(response.data);
+    } catch (error) {
+      console.error('Error refreshing orders:', error);
+      toast.error('Failed to refresh purchase orders');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -92,14 +116,6 @@ export default function PurchaseOrders() {
       <Card>
         <div className="flex justify-between items-center p-4">
           <Typography variant="h6">Purchase Orders</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Add />}
-            onClick={handleAdd}
-          >
-            Create Order
-          </Button>
         </div>
         <TableContainer>
           <Table>
@@ -116,14 +132,20 @@ export default function PurchaseOrders() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockOrders.map((order) => (
+              {orders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>{order.orderNumber}</TableCell>
                   <TableCell>{order.supplier}</TableCell>
                   <TableCell>{order.materialType}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
                   <TableCell>₹{order.totalAmount}</TableCell>
-                  <TableCell>{order.deliveryDate}</TableCell>
+                  <TableCell>
+                    {new Intl.DateTimeFormat('en-GB', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    }).format(new Date(order.deliveryDate))}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={order.status.toUpperCase()}
@@ -135,14 +157,14 @@ export default function PurchaseOrders() {
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={() => handleEdit(order)}
+                      onClick={() => handleEditOrder(order)}
                     >
                       <Edit />
                     </IconButton>
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={() => handleDelete(order)}
+                      onClick={() => handleDeleteOrder(order)}
                     >
                       <Delete />
                     </IconButton>

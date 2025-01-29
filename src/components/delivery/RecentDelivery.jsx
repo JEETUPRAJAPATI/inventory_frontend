@@ -67,6 +67,7 @@ export default function DeliveryList() {
                         <Table>
                             <TableHead>
                                 <TableRow>
+                                    <TableCell>orderId</TableCell>
                                     <TableCell>Customer</TableCell>
                                     <TableCell>Contact</TableCell>
                                     <TableCell>Delivery Date</TableCell>
@@ -76,11 +77,10 @@ export default function DeliveryList() {
                             <TableBody>
                                 {deliveries.map((delivery) => (
                                     <TableRow key={delivery._id}>
-                                        <TableCell>{delivery.customer}</TableCell>
-                                        <TableCell>{delivery.contact}</TableCell>
-                                        <TableCell>
-                                            {new Date(delivery.delivery_date).toLocaleDateString()}
-                                        </TableCell>
+                                        <TableCell>{delivery.orderId || 'N/A'}</TableCell>
+                                        <TableCell>{delivery.orderDetails?.customerName || 'N/A'}</TableCell>
+                                        <TableCell>{delivery.orderDetails?.mobileNumber || 'N/A'}</TableCell>
+                                        <TableCell>{delivery.deliveryDate ? new Date(delivery.deliveryDate).toLocaleDateString() : 'N/A'}</TableCell>
                                         <TableCell>
                                             <Chip
                                                 label={delivery.status}

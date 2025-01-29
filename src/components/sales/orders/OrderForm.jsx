@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Grid,
-} from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField } from '@mui/material';
 import FormInput from '../../common/FormInput';
 import FormSelect from '../../common/FormSelect';
 import orderService from '/src/services/orderService.js';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import Autocomplete from '@mui/material/Autocomplete';
 
 const initialFormData = {
   customerName: '',
@@ -45,15 +39,14 @@ const orderStatuses = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
-
 export default function OrderForm({ open, onClose, onSubmit, order = null }) {
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
+  const [mobileNumbers, setMobileNumbers] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (order) {
-      // Ensure bagDetails and other fields are set correctly
       setFormData({
         ...order,
         bagDetails: {
@@ -63,11 +56,24 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
           color: order.bagDetails?.color || '',
           printColor: order.bagDetails?.printColor || '',
           gsm: order.bagDetails?.gsm || '',
-        }
+        },
       });
     } else {
       setFormData(initialFormData);
     }
+
+    const fetchMobileNumbers = async () => {
+      try {
+        const response = await orderService.getUsedMobileNumbers();
+        if (response.success) {
+          setMobileNumbers(response.data);
+        }
+      } catch (error) {
+        toast.error('Error fetching mobile numbers');
+      }
+    };
+
+    fetchMobileNumbers();
   }, [order]);
 
   const handleChange = (e) => {
@@ -87,29 +93,72 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
     }
   };
 
+  const handleMobileNumberSearch = async (event, newValue) => {
+    if (newValue) {
+      if (mobileNumbers.includes(newValue)) {
+        try {
+          const response = await orderService.getOrderByMobileNumber(newValue);
+          if (response.success && response.data.length > 0) {
+            const orderData = response.data[0];
+            setFormData({
+              ...formData,
+              customerName: orderData.customerName,
+              email: orderData.email,
+              address: orderData.address,
+              mobileNumber: newValue,
+            });
+          }
+        } catch (error) {
+          toast.error('Error fetching order details');
+        }
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          mobileNumber: newValue,
+          customerName: '', // Resetting other fields if new number entered
+          email: '',
+          address: '',
+        }));
+      }
+    } else {
+      // If the user clears the mobile number input, reset the customer fields
+      setFormData(prev => ({
+        ...prev,
+        mobileNumber: '',
+        customerName: '',
+        email: '',
+        address: '',
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Remove _id if it exists (for update case)
     const { _id, orderId, createdAt, updatedAt, __v, ...orderDataWithoutId } = formData;
     try {
       if (order) {
-        await orderService.updateOrder(order._id, orderDataWithoutId); // Update order without _id
+        await orderService.updateOrder(order._id, orderDataWithoutId);
         toast.success('Order updated successfully!');
       } else {
-        await orderService.createOrder(orderDataWithoutId); // Create new order without _id
+        await orderService.createOrder(orderDataWithoutId);
         toast.success('Order created successfully!');
       }
-      onSubmit(formData); // Pass the form data back to the parent
+      onSubmit(formData);
       onClose();
-      setFormData(initialFormData); // Reset form after submit
+      setFormData(initialFormData);
     } catch (error) {
       toast.error(error.message || 'Failed to create or update order');
     } finally {
       setLoading(false);
     }
   };
+
+  const mobileOptions = mobileNumbers.map(number => ({
+    value: number,
+    label: number,
+  }));
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -128,15 +177,24 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormInput
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
+              <Autocomplete
+                value={formData.mobileNumber}
+                onChange={handleMobileNumberSearch}
+                options={mobileNumbers}
+                getOptionLabel={(option) => option}
+                freeSolo
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Search or enter mobile number"
+                    variant="outlined"
+                    fullWidth
+                    required
+                  />
+                )}
               />
             </Grid>
+
             <Grid item xs={12}>
               <FormInput
                 label="Address"
@@ -150,9 +208,10 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
             </Grid>
             <Grid item xs={12} md={6}>
               <FormInput
-                label="Mobile Number"
-                name="mobileNumber"
-                value={formData.mobileNumber}
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
               />

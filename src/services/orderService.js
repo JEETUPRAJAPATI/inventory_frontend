@@ -18,6 +18,14 @@ const orderService = {
 
   deleteOrder: async (orderId) => {
     await api.delete(`/sales/orders/${orderId}`);
+  },
+  getUsedMobileNumbers: async () => {
+    const response = await api.get('/sales/orders/list/mobile-numbers');
+    return response.data;
+  },
+  getOrderByMobileNumber: async (mobileNumber) => {
+    const response = await api.get(`/sales/orders/get/mobile-numbers?mobileNumber=${mobileNumber}`);
+    return response.data; // This will return order details based on the mobile number
   }
 };
 

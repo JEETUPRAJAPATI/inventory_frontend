@@ -12,12 +12,17 @@ import {
   Chip,
   Box,
   Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel
 } from '@mui/material';
-import { Visibility, CheckCircle, Cancel } from '@mui/icons-material';
-import DeliveryDetailsModal from './DeliveryDetailsModal';
-import DeliveryFilters from './DeliveryFilters';
+import { Visibility } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import deliveryService from '../../services/deliveryService';
+import DeliveryDetailsModal from './DeliveryDetailsModal';
+import DeliveryFilters from './DeliveryFilters';
 
 export default function DeliveryList() {
   const [deliveries, setDeliveries] = useState([]);
@@ -29,6 +34,7 @@ export default function DeliveryList() {
     page: 1,
     limit: 10
   });
+  const [statusToUpdate, setStatusToUpdate] = useState(''); // State for editing the status
 
   const fetchDeliveries = async () => {
     try {
@@ -50,15 +56,16 @@ export default function DeliveryList() {
     try {
       const delivery = await deliveryService.getDeliveryById(deliveryId);
       setSelectedDelivery(delivery);
+      setStatusToUpdate(delivery.status); // Set the current status for editing
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  const handleStatusUpdate = async (deliveryId, newStatus) => {
+  const handleStatusUpdate = async (deliveryId) => {
     try {
-      await deliveryService.updateDeliveryStatus(deliveryId, newStatus);
-      toast.success(`Delivery status updated to ${newStatus}`);
+      await deliveryService.updateDeliveryStatus(deliveryId, statusToUpdate);
+      toast.success(`Delivery status updated to ${statusToUpdate}`);
       fetchDeliveries();
     } catch (error) {
       toast.error(error.message);
@@ -67,9 +74,10 @@ export default function DeliveryList() {
 
   const getStatusColor = (status) => {
     const colors = {
-      'Pending': 'warning',
-      'In Transit': 'info',
-      'Delivered': 'success'
+      pending: 'warning',
+      'in transit': 'info',
+      delivered: 'success',
+      cancelled: 'error',
     };
     return colors[status] || 'default';
   };
@@ -78,10 +86,7 @@ export default function DeliveryList() {
     <>
       <Card>
         <Box sx={{ p: 2 }}>
-          <DeliveryFilters
-            filters={filters}
-            onFilterChange={setFilters}
-          />
+          <DeliveryFilters filters={filters} onFilterChange={setFilters} />
         </Box>
 
         <TableContainer>
@@ -93,6 +98,7 @@ export default function DeliveryList() {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell>Order Id</TableCell>
                   <TableCell>Customer</TableCell>
                   <TableCell>Contact</TableCell>
                   <TableCell>Delivery Date</TableCell>
@@ -103,15 +109,14 @@ export default function DeliveryList() {
               <TableBody>
                 {deliveries.map((delivery) => (
                   <TableRow key={delivery._id}>
-                    <TableCell>{delivery.customer}</TableCell>
-                    <TableCell>{delivery.contact}</TableCell>
-                    <TableCell>
-                      {new Date(delivery.delivery_date).toLocaleDateString()}
-                    </TableCell>
+                    <TableCell>{delivery.orderId || 'N/A'}</TableCell>
+                    <TableCell>{delivery.orderDetails?.customerName || 'N/A'}</TableCell>
+                    <TableCell>{delivery.orderDetails?.mobileNumber || 'N/A'}</TableCell>
+                    <TableCell>{delivery.deliveryDate ? new Date(delivery.deliveryDate).toLocaleDateString() : 'N/A'}</TableCell>
                     <TableCell>
                       <Chip
-                        label={delivery.status}
-                        color={getStatusColor(delivery.status)}
+                        label={delivery.status || 'N/A'}
+                        color={getStatusColor(delivery.status || 'default')}
                         size="small"
                       />
                     </TableCell>
@@ -124,27 +129,31 @@ export default function DeliveryList() {
                         <Visibility />
                       </IconButton>
 
-                      {delivery.status === 'Pending' && (
+                      {delivery.status !== 'delivered' && (
                         <>
+                          <FormControl sx={{ minWidth: 120, ml: 1 }} size="small">
+                            <InputLabel>Status</InputLabel>
+                            <Select
+                              value={statusToUpdate}
+                              onChange={(e) => setStatusToUpdate(e.target.value)}
+                              label="Status"
+                            >
+                              <MenuItem value="pending">Pending</MenuItem>
+                              <MenuItem value="in transit">In Transit</MenuItem>
+                              <MenuItem value="delivered">Delivered</MenuItem>
+                              <MenuItem value="cancelled">Cancelled</MenuItem>
+                            </Select>
+                          </FormControl>
                           <Button
                             size="small"
                             variant="contained"
                             color="primary"
-                            onClick={() => handleStatusUpdate(delivery._id, 'In Transit')}
+                            onClick={() => handleStatusUpdate(delivery._id)}
+                            sx={{ ml: 1 }}
                           >
-                            Start Delivery
+                            Update Status
                           </Button>
                         </>
-                      )}
-                      {delivery.status === 'In Transit' && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="success"
-                          onClick={() => handleStatusUpdate(delivery._id, 'Delivered')}
-                        >
-                          Mark Delivered
-                        </Button>
                       )}
                     </TableCell>
                   </TableRow>

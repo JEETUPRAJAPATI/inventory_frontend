@@ -1,5 +1,4 @@
-import React, { Fragment, useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -22,56 +21,122 @@ import {
 } from '@mui/material';
 import { Add, Edit, Visibility } from '@mui/icons-material';
 import toast from 'react-hot-toast';
-import { AddCircleOutline as AddCircleOutlineIcon } from '@mui/icons-material';
+import PackageService from '../../services/packageService';
 import { PictureAsPdf } from '@mui/icons-material';
 import { jsPDF } from 'jspdf';
-const mockOrders = [
-  {
-    id: 'ORD-001',
-    customerName: 'John Doe',
-    totalDimensions: '30x20x15',
-    totalWeight: 2.5,
-    status: 'pending',
-    packages: [
-      { id: 'PKG-001', length: 30, width: 20, height: 15, weight: 2.5 }
-    ]
-  },
-  {
-    id: 'ORD-002',
-    customerName: 'Jane Smith',
-    totalDimensions: '25x15x10',
-    totalWeight: 1.8,
-    status: 'ready',
-    packages: [
-      { id: 'PKG-002', length: 25, width: 15, height: 10, weight: 1.8 }
-    ]
-  }
-];
 const initialPackageState = {
   length: '',
   width: '',
   height: '',
   weight: ''
 };
+
 export default function PackagingManagement() {
+  const [orders, setOrders] = useState([]); // Dynamic data from API
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [packageListOpen, setPackageListOpen] = useState(false);
+  const [addPackageOpen, setAddPackageOpen] = useState(false);
   const [editPackageOpen, setEditPackageOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [packages, setPackages] = useState([initialPackageState]);
-  const [addPackageOpen, setAddPackageOpen] = useState(false);
+  const [packageListOpen, setPackageListOpen] = useState(false);
+  const [packages, setPackages] = useState([]);
+  const [newPackage, setNewPackage] = useState(initialPackageState); // For editing package
 
+  // Fetch orders from the service
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const orders = await PackageService.fetchOrders();
+        setOrders(orders.data);
+      } catch (error) {
+        toast.error('Failed to fetch orders.');
+        console.error('Error fetching orders:', error);
+      }
+    };
 
-  const [newPackage, setNewPackage] = useState({
-    length: '',
-    width: '',
-    height: '',
-    weight: ''
-  });
+    fetchOrders();
+  }, []);
 
-  const handleViewPackages = (order) => {
+  // Handle order selection
+  const handleOrderChange = (e) => {
+    const selectedOrderId = e.target.value; // Get the selected orderId
+    const order = orders.find((o) => o.orderId === selectedOrderId); // Match with orderId
+    setSelectedOrder(order); // Set the selected order
+
+    if (order) {
+      setPackages({
+        ...packages,
+        [selectedOrderId]: [{ ...initialPackageState }],
+      });
+    }
+  };
+
+  // Add new package to the selected order
+  const handleAddPackage = () => {
+    if (!selectedOrder) return;
+    setPackages({
+      ...packages,
+      [selectedOrder.orderId]: [
+        ...packages[selectedOrder.orderId],
+        { ...initialPackageState },
+      ],
+    });
+  };
+
+  // Handle package input changes
+  const handlePackageChange = (orderId, index, field, value) => {
+    const updatedPackages = [...packages[orderId]];
+    updatedPackages[index][field] = value;
+    setPackages({
+      ...packages,
+      [orderId]: updatedPackages,
+    });
+  };
+
+  // Save packages using the service
+  const handleSavePackages = async () => {
+    if (!selectedOrder) {
+      toast.error('Please select an order.');
+      return;
+    }
+
+    try {
+      const payload = {
+        order_id: selectedOrder.orderId,
+        package_details: packages[selectedOrder.orderId].map((pkg) => ({
+          length: parseFloat(pkg.length),
+          width: parseFloat(pkg.width),
+          height: parseFloat(pkg.height),
+          weight: parseFloat(pkg.weight),
+        })),
+      };
+
+      await PackageService.addPackage(payload);
+      toast.success('Packages saved successfully');
+      handleCancel();
+    } catch (error) {
+      toast.error('Failed to save packages.');
+      console.error('Error saving packages:', error);
+    }
+  };
+
+  const handleCancel = () => {
+    setSelectedOrder(null);
+    setPackages({});
+    setAddPackageOpen(false);
+    setEditPackageOpen(false);
+  };
+
+  const handleViewPackages = async (order) => {
     setSelectedOrder(order);
     setPackageListOpen(true);
+
+    try {
+      const fetchedPackages = await PackageService.fetchPackagesByOrderId(order.orderId);
+      console.log('Fetched order list', fetchedPackages);
+      setPackages(fetchedPackages);
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+    }
   };
 
   const handleEditPackage = (pkg) => {
@@ -80,51 +145,54 @@ export default function PackagingManagement() {
       length: pkg.length,
       width: pkg.width,
       height: pkg.height,
-      weight: pkg.weight
+      weight: pkg.weight,
     });
     setEditPackageOpen(true);
   };
 
-  const handleUpdatePackage = () => {
-    toast.success('Package dimensions updated successfully');
-    setEditPackageOpen(false);
-  };
+  const handleUpdatePackage = async () => {
+    if (!selectedPackage || !selectedOrder) {
+      toast.error('Please select a package and order to edit.');
+      return;
+    }
 
-  // Handle Order Selection
-  const handleOrderChange = (e) => {
-    const order = mockOrders.find(o => o.id === e.target.value);
-    setSelectedOrder(order);
+    const updatedPackage = {
+      ...selectedPackage,
+      length: newPackage.length,
+      width: newPackage.width,
+      height: newPackage.height,
+      weight: newPackage.weight,
+    };
 
-    if (order) {
-      const [length, width, height] = order.totalDimensions.split('x');
-      const newPackage = {
-        length: length || '',
-        width: width || '',
-        height: height || '',
-        weight: order.totalWeight || ''
-      };
-      setPackages([newPackage]);
+    // Update local state
+    const updatedPackages = packages.map(pkg =>
+      pkg._id === selectedPackage._id ? updatedPackage : pkg
+    );
+    setPackages(updatedPackages);
+
+    try {
+      await PackageService.updatePackage(selectedOrder.orderId, selectedPackage._id, updatedPackage);
+      const fetchedPackages = await PackageService.fetchPackagesByOrderId(selectedOrder.orderId);
+      console.log('Refresh Data Fetched order list', fetchedPackages);
+      setPackages(fetchedPackages || []);
+      toast.success('Package updated successfully');
+      setEditPackageOpen(false);
+    } catch (error) {
+      toast.error('Failed to update package.');
+      console.error('Error updating package:', error);
     }
   };
 
 
-  const handleAddPackage = () => {
-    setPackages([...packages, { ...initialPackageState }]);
-  };
+  const generatePackageLabel = (pkg) => {
 
-  const handleSavePackages = () => {
-    toast.success('Packages saved successfully');
-    handleCancel();
-  };
+    console.log('pkg', pkg);
+    // Ensure the 'pkg' object contains necessary data
+    if (!pkg) {
+      toast.error('Invalid package data');
+      return;
+    }
 
-  const handleCancel = () => {
-    setSelectedOrder(null);
-    setPackages([initialPackageState]);
-    setAddPackageOpen(false);
-  };
-
-
-  const generatePackageLabel = (packageData) => {
     const doc = new jsPDF();
 
     // Add company header
@@ -137,34 +205,36 @@ export default function PackagingManagement() {
     const lineHeight = 10;
 
     // Left column
-    doc.text(`ROLL No.    : ${packageData.rollNo}`, 20, startY);
-    doc.text(`COLOR       : ${packageData.color}`, 20, startY + lineHeight);
+    doc.text(`ROLL No.    : ${pkg.rollNo || 'N/A'}`, 20, startY);
+    doc.text(`COLOR       : ${pkg.color || 'N/A'}`, 20, startY + lineHeight);
     doc.text(`UNIT No.    : 1`, 20, startY + lineHeight * 2);
     doc.text(`CUST. Code  : SW350`, 20, startY + lineHeight * 3);
     doc.text(`Rolls In bundle : 1`, 20, startY + lineHeight * 4);
     doc.text(`Lot No      : 2415N9U1`, 20, startY + lineHeight * 5);
 
     // Right column
-    doc.text(`GSM         : ${packageData.gsm}`, 120, startY);
-    doc.text(`WIDTH       : ${packageData.width}`, 120, startY + lineHeight);
-    doc.text(`LENGTH      : ${packageData.length}`, 120, startY + lineHeight * 2);
-    doc.text(`GROSS WT.   : ${packageData.grossWeight}`, 120, startY + lineHeight * 3);
-    doc.text(`NET WT.     : ${packageData.netWeight}`, 120, startY + lineHeight * 4);
+    doc.text(`GSM         : ${pkg.gsm || 'N/A'}`, 120, startY);
+    doc.text(`WIDTH       : ${pkg.width || 'N/A'}`, 120, startY + lineHeight);
+    doc.text(`LENGTH      : ${pkg.length || 'N/A'}`, 120, startY + lineHeight * 2);
+    doc.text(`GROSS WT.   : ${pkg.grossWeight || 'N/A'}`, 120, startY + lineHeight * 3);
+    doc.text(`NET WT.     : ${pkg.netWeight || 'N/A'}`, 120, startY + lineHeight * 4);
 
     // Additional details
     const startY2 = startY + lineHeight * 6;
-    doc.text(`PATTERN     : ${packageData.pattern}`, 20, startY2);
-    doc.text(`TYPE OF FABRIC : ${packageData.fabricType}`, 20, startY2 + lineHeight);
-    doc.text(`TREATMENT   : ${packageData.treatment}`, 20, startY2 + lineHeight * 2);
-    doc.text(`TECHNOLOGY  : ${packageData.technology}`, 20, startY2 + lineHeight * 3);
+    doc.text(`PATTERN     : ${pkg.pattern || 'N/A'}`, 20, startY2);
+    doc.text(`TYPE OF FABRIC : ${pkg.fabricType || 'N/A'}`, 20, startY2 + lineHeight);
+    doc.text(`TREATMENT   : ${pkg.treatment || 'N/A'}`, 20, startY2 + lineHeight * 2);
+    doc.text(`TECHNOLOGY  : ${pkg.technology || 'N/A'}`, 20, startY2 + lineHeight * 3);
 
     // Add barcode (simulated with a black rectangle)
     doc.setFillColor(0, 0, 0);
     doc.rect(20, startY2 + lineHeight * 4, 80, 20, 'F');
 
-    doc.save(`package-label-${packageData.rollNo}.pdf`);
+    // Save the PDF with dynamic filename
+    doc.save(`package-label-${pkg.gsm}.pdf`);
     toast.success('Package label downloaded successfully');
   };
+
 
 
   return (
@@ -195,12 +265,12 @@ export default function PackagingManagement() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {mockOrders.map((order) => (
+                {orders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell>{order.id}</TableCell>
-                    <TableCell>{order.customerName}</TableCell>
-                    <TableCell>{order.totalDimensions}</TableCell>
-                    <TableCell>{order.totalWeight}</TableCell>
+                    <TableCell>{order?.orderId || 'N/A'}</TableCell>
+                    <TableCell>{order?.customerName || 'N/A'}</TableCell>
+                    <TableCell>{order?.totalDimensions || 'N/A'}</TableCell>
+                    <TableCell>{order?.totalWeight || 'N/A'}</TableCell>
                     <TableCell>
                       <Chip
                         label={order.status.toUpperCase()}
@@ -225,7 +295,6 @@ export default function PackagingManagement() {
         </Box>
       </Card>
 
-      {/* Package List Modal */}
       <Dialog
         open={packageListOpen}
         onClose={() => setPackageListOpen(false)}
@@ -249,29 +318,35 @@ export default function PackagingManagement() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {selectedOrder?.packages.map((pkg) => (
-                  <TableRow key={pkg.id}>
-                    <TableCell>{pkg.id}</TableCell>
-                    <TableCell>{pkg.length}</TableCell>
-                    <TableCell>{pkg.width}</TableCell>
-                    <TableCell>{pkg.height}</TableCell>
-                    <TableCell>{pkg.weight}</TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleEditPackage(pkg)}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="primary"
-                        onClick={() => generatePackageLabel(pkg)}
-                      >
-                        <PictureAsPdf />
-                      </IconButton>
-                    </TableCell>
+                {packages.length > 0 ? (
+                  packages[0].package_details.map((pkg) => (
+                    <TableRow key={pkg._id}>
+                      <TableCell>{pkg._id}</TableCell>
+                      <TableCell>{pkg.length}</TableCell>
+                      <TableCell>{pkg.width}</TableCell>
+                      <TableCell>{pkg.height}</TableCell>
+                      <TableCell>{pkg.weight}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleEditPackage(pkg)}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton
+                          color="primary"
+                          onClick={() => generatePackageLabel(pkg)}
+                        >
+                          <PictureAsPdf />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6}>No packages found</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -281,7 +356,8 @@ export default function PackagingManagement() {
         </DialogActions>
       </Dialog>
 
-      {/* Edit Package Modal */}
+
+      { /* Edit Package Dimensions */}
       <Dialog
         open={editPackageOpen}
         onClose={() => setEditPackageOpen(false)}
@@ -329,13 +405,9 @@ export default function PackagingManagement() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditPackageOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleUpdatePackage}>
-            Update Package
-          </Button>
+          <Button variant="contained" onClick={handleUpdatePackage}>Update Package</Button>
         </DialogActions>
       </Dialog>
-
-      {/* Add Package Modal */}
       {/* Add Package Modal */}
       <Dialog
         open={addPackageOpen}
@@ -346,30 +418,34 @@ export default function PackagingManagement() {
         <DialogTitle>Add New Packages</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
+            {/* Order Selection */}
             <Grid item xs={12}>
               <TextField
                 select
                 label="Select Order"
                 fullWidth
-                value={selectedOrder?.id || ''}
+                value={selectedOrder?.orderId || ''}
                 onChange={handleOrderChange}
                 SelectProps={{
                   native: true,
                 }}
               >
                 <option value="">Select an order</option>
-                {mockOrders.map((order) => (
-                  <option key={order.id} value={order.id}>
-                    {order.id} - {order.customerName}
+                {orders.map((order) => (
+                  <option key={order.orderId} value={order.orderId}>
+                    {order.orderId} - {order.customerName}
                   </option>
                 ))}
               </TextField>
             </Grid>
 
+            {/* Selected Order Details */}
             {selectedOrder && (
               <Grid item xs={12}>
                 <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" gutterBottom>Order Details</Typography>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Order Details
+                  </Typography>
                   <Typography variant="body2">Customer: {selectedOrder.customerName}</Typography>
                   <Typography variant="body2">Dimensions: {selectedOrder.totalDimensions}</Typography>
                   <Typography variant="body2">Weight: {selectedOrder.totalWeight} kg</Typography>
@@ -377,56 +453,54 @@ export default function PackagingManagement() {
               </Grid>
             )}
 
-            {packages.map((pkg, index) => (
-              <Fragment key={index}>
-                <Grid item xs={12}>
-                  <Box sx={{ border: '1px solid #ddd', p: 2, borderRadius: 1 }}>
-                    <Typography variant="h6" gutterBottom>Package {index + 1}</Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6}>
-                        <TextField
-                          label="Length (cm)"
-                          value={pkg.length}
-                          onChange={(e) => handlePackageChange(index, 'length', e.target.value)}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <TextField
-                          label="Width (cm)"
-                          value={pkg.width}
-                          onChange={(e) => handlePackageChange(index, 'width', e.target.value)}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <TextField
-                          label="Height (cm)"
-                          value={pkg.height}
-                          onChange={(e) => handlePackageChange(index, 'height', e.target.value)}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <TextField
-                          label="Weight (kg)"
-                          value={pkg.weight}
-                          onChange={(e) => handlePackageChange(index, 'weight', e.target.value)}
-                          fullWidth
-                        />
-                      </Grid>
+            {/* Package List for Selected Order */}
+            {selectedOrder && packages[selectedOrder.orderId] && packages[selectedOrder.orderId].map((pkg, index) => (
+              <Grid item xs={12} key={index}>
+                <Box sx={{ border: '1px solid #ddd', p: 2, borderRadius: 1 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Package {index + 1}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <TextField
+                        label="Length (cm)"
+                        value={pkg.length}
+                        onChange={(e) => handlePackageChange(selectedOrder.orderId, index, 'length', e.target.value)}
+                        fullWidth
+                      />
                     </Grid>
-                  </Box>
-                </Grid>
-              </Fragment>
+                    <Grid item xs={6}>
+                      <TextField
+                        label="Width (cm)"
+                        value={pkg.width}
+                        onChange={(e) => handlePackageChange(selectedOrder.orderId, index, 'width', e.target.value)}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        label="Height (cm)"
+                        value={pkg.height}
+                        onChange={(e) => handlePackageChange(selectedOrder.orderId, index, 'height', e.target.value)}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        label="Weight (kg)"
+                        value={pkg.weight}
+                        onChange={(e) => handlePackageChange(selectedOrder.orderId, index, 'weight', e.target.value)}
+                        fullWidth
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Grid>
             ))}
 
+            {/* Add New Package Button */}
             <Grid item xs={12}>
-              <Button
-                variant="outlined"
-                onClick={handleAddPackage}
-                fullWidth
-              >
+              <Button variant="outlined" onClick={handleAddPackage} fullWidth>
                 Add Another Package
               </Button>
             </Grid>
@@ -439,8 +513,6 @@ export default function PackagingManagement() {
           </Button>
         </DialogActions>
       </Dialog>
-
-
     </>
   );
 }

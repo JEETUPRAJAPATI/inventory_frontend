@@ -12,12 +12,22 @@ const adminService = {
     }
   },
 
+  updateSalesOrder: async (orderId, updatedData) => {
+    try {
+      const response = await api.put(`/admin/sales/${orderId}`, updatedData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error updating sales order');
+    }
+  },
+
+  // Delete a sales order
   deleteSalesOrder: async (orderId) => {
     try {
-      await api.delete(`/admin/sales/${orderId}`);
+      const response = await api.delete(`/admin/sales/${orderId}`);
+      return response.data;
     } catch (error) {
-      console.error('API Error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to delete order');
+      throw new Error(error.response?.data?.message || 'Error deleting sales order');
     }
   },
 
@@ -77,6 +87,34 @@ const adminService = {
     }
   },
 
+
+  getDeliveries: async (params) => {
+    try {
+      const response = await api.get(`admin/delivery`, { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch deliveries');
+    }
+  },
+  // Edit an existing delivery
+  updateDelivery: async (id, deliveryData) => {
+    try {
+      const response = await api.put(`admin/delivery/${id}`, deliveryData);
+      return response.data; // return the data from response
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to edit delivery');
+    }
+  },
+
+  // Delete a delivery
+  deleteDelivery: async (id) => {
+    try {
+      const response = await api.delete(`admin/delivery/${id}`);
+      return response.data; // return the data from response
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to delete delivery');
+    }
+  },
   // W-Cut Production Management
   getWCutFlexo: async (params) => {
     try {

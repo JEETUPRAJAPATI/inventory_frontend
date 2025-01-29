@@ -19,14 +19,24 @@ const initialFormData = {
   deliveryDate: '',
   status: 'pending',
   notes: '',
+  totalAmount: 0,
 };
 
 export default function PurchaseOrderForm({ open, onClose, onSubmit, order = null }) {
   const [formData, setFormData] = useState(initialFormData);
-
   useEffect(() => {
     if (order) {
-      setFormData(order);
+      setFormData({
+        orderNumber: order.order_number || '',
+        supplier: order.supplier || '',
+        materialType: order.material_type || '',
+        quantity: order.quantity || '',
+        unitPrice: order.unitPrice || '',
+        deliveryDate: order.deliveryDate || '',
+        status: order.status || 'pending',
+        notes: order.notes || '',
+        totalAmount: order.totalAmount || 0,
+      });
     } else {
       setFormData(initialFormData);
     }
@@ -34,12 +44,35 @@ export default function PurchaseOrderForm({ open, onClose, onSubmit, order = nul
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prevData) => {
+      const updatedData = {
+        ...prevData,
+        [name]: value,
+      };
+      if (name === 'quantity' || name === 'unitPrice') {
+        updatedData.totalAmount = updatedData.quantity * updatedData.unitPrice;
+      }
+
+      return updatedData;
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    const formDataToSend = {
+      order_number: formData.orderNumber,
+      supplier: formData.supplier,
+      materialType: formData.materialType,
+      quantity: formData.quantity,
+      unitPrice: formData.unitPrice,
+      totalAmount: formData.totalAmount,
+      deliveryDate: formData.deliveryDate,
+      status: formData.status,
+      notes: formData.notes,
+    };
+
+    onSubmit(formDataToSend);
   };
 
   const materialTypes = [
@@ -60,9 +93,7 @@ export default function PurchaseOrderForm({ open, onClose, onSubmit, order = nul
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>
-          {order ? 'Edit Purchase Order' : 'Create Purchase Order'}
-        </DialogTitle>
+        <DialogTitle>{order ? 'Edit Purchase Order' : 'Create Purchase Order'}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
@@ -119,7 +150,11 @@ export default function PurchaseOrderForm({ open, onClose, onSubmit, order = nul
                 label="Delivery Date"
                 name="deliveryDate"
                 type="date"
-                value={formData.deliveryDate}
+                value={
+                  formData.deliveryDate
+                    ? new Date(formData.deliveryDate).toISOString().split('T')[0]
+                    : ''
+                }
                 onChange={handleChange}
                 required
               />

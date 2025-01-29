@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -12,8 +12,11 @@ import {
   Typography,
   Button,
   Chip,
+  MenuItem,
+  TextField,
+  Box,
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Edit, Delete, Add, Search } from '@mui/icons-material';
 import UserForm from '../components/users/UserForm';
 import DeleteConfirmDialog from '../components/common/DeleteConfirmDialog';
 import { useAdminData } from '../hooks/useAdminData';
@@ -21,28 +24,45 @@ import adminService from '../services/adminService';
 import toast from 'react-hot-toast';
 
 export default function UserManagement() {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const [formOpen, setFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-
-  const { data, loading, updateParams, refetch } = useAdminData('getUsers', {
-    page: page + 1,
-    limit: rowsPerPage
+  const [users, setUsers] = useState([]);
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'all',
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-    updateParams({ page: newPage + 1 });
+  // Fetch users based on filters
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getUsers(filters);
+      console.log('Users response:', response); // Debug log
+      setUsers(response?.data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error); // Debug log
+      toast.error('Error fetching users data');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    setRowsPerPage(newRowsPerPage);
-    setPage(0);
-    updateParams({ page: 1, limit: newRowsPerPage });
+  useEffect(() => {
+    fetchUsers();
+  }, [filters]);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+      page: 1, // Reset to page 1 when filters change
+    }));
   };
 
   const handleAdd = () => {
@@ -65,6 +85,18 @@ export default function UserManagement() {
     setDeleteDialogOpen(true);
   };
 
+  const handleDeleteConfirm = async () => {
+    try {
+      await adminService.deleteUser(userToDelete._id); // Assuming _id is the unique identifier
+      toast.success('User deleted successfully');
+      setDeleteDialogOpen(false);
+      fetchUsers(); // Refresh users list after delete operation
+    } catch (error) {
+      toast.error('Failed to delete user');
+      setDeleteDialogOpen(false);
+    }
+  };
+
   const handleFormSubmit = async (formData) => {
     try {
       if (selectedUser) {
@@ -75,24 +107,19 @@ export default function UserManagement() {
         toast.success('User added successfully');
       }
       setFormOpen(false);
-      refetch();
+      fetchUsers(); // Refresh users list after add or update operation
     } catch (error) {
       toast.error(error.message || 'Operation failed');
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      await adminService.deleteUser(userToDelete._id);
-      toast.success('User deleted successfully');
-      setDeleteDialogOpen(false);
-      refetch();
-    } catch (error) {
-      toast.error('Failed to delete user');
-    }
+  // Reset all filters
+  const handleResetFilters = () => {
+    setFilters({
+      search: '',
+      status: 'all',
+    });
   };
-
-  if (loading) return <div>Loading...</div>;
 
   return (
     <>
@@ -108,6 +135,36 @@ export default function UserManagement() {
             Add User
           </Button>
         </div>
+
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+          <TextField
+            size="small"
+            placeholder="Search..."
+            name="search"
+            value={filters.search}
+            onChange={handleFilterChange}
+            InputProps={{
+              startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />,
+            }}
+          />
+          <TextField
+            select
+            size="small"
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+            sx={{ minWidth: 120 }}
+          >
+            <MenuItem value="all">All Status</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+          </TextField>
+
+          <Button variant="outlined" onClick={handleResetFilters}>
+            Reset Filters
+          </Button>
+        </Box>
+
         <TableContainer>
           <Table>
             <TableHead>
@@ -121,7 +178,7 @@ export default function UserManagement() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {data?.data?.map((user) => (
+              {users.map((user) => (
                 <TableRow key={user._id || user.id}>
                   <TableCell>{user.fullName}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -158,15 +215,6 @@ export default function UserManagement() {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={data.total || 0}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
       </Card>
 
       <UserForm

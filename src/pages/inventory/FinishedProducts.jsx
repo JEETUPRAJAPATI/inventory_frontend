@@ -30,6 +30,7 @@ export default function FinishedProducts() {
     const fetchProducts = async () => {
       try {
         const response = await productService.getProducts();
+        console.log('response', response.data)
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -53,10 +54,11 @@ export default function FinishedProducts() {
   };
 
   const handleFormSubmit = async (formData) => {
+    console.log('form data', selectedProduct);
     try {
       if (selectedProduct) {
         // Update product
-        await productService.updateProduct(selectedProduct.id, formData);
+        await productService.updateProduct(formData._id, formData);
         toast.success('Product updated successfully');
       } else {
         // Add new product
@@ -66,8 +68,8 @@ export default function FinishedProducts() {
       setFormOpen(false);
       // Re-fetch products after update or add
       const response = await productService.getProducts();
-      if (Array.isArray(response)) {
-        setProducts(response);
+      if (response) {
+        setProducts(response.data);
       }
     } catch (error) {
       toast.error('Failed to save product');
@@ -76,13 +78,13 @@ export default function FinishedProducts() {
 
   const handleDeleteConfirm = async () => {
     try {
-      await productService.deleteProduct(productToDelete.id);  // Call API to delete product
+      await productService.deleteProduct(productToDelete._id);  // Call API to delete product
       toast.success('Product deleted successfully');
       setDeleteDialogOpen(false);
       // Re-fetch products after deletion
       const response = await productService.getProducts();
-      if (Array.isArray(response)) {
-        setProducts(response);
+      if (response) {
+        setProducts(response.data);
       }
     } catch (error) {
       toast.error('Failed to delete product');
@@ -107,13 +109,6 @@ export default function FinishedProducts() {
       <Card>
         <div className="flex justify-between items-center p-4">
           <Typography variant="h6">Finished Products</Typography>
-          <IconButton
-            color="primary"
-            onClick={() => setFormOpen(true)}
-            aria-label="add-product"
-          >
-            <Add />
-          </IconButton>
         </div>
         <TableContainer>
           <Table>
@@ -133,7 +128,7 @@ export default function FinishedProducts() {
               {products.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
+                  <TableCell>{product.category.replace('_', ' ')}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
                   <TableCell>{product.size}</TableCell>
                   <TableCell>{product.color}</TableCell>

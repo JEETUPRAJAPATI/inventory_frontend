@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -17,124 +17,169 @@ import {
   Grid,
   Box,
   Chip,
+  CircularProgress,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import toast from 'react-hot-toast';
-
-const mockDeliveries = [
-  {
-    id: 'DEL-001',
-    orderId: 'ORD-001',
-    agentName: 'John Doe',
-    customerName: 'Jane Smith',
-    address: '123 Main St, City, Country',
-    mobileNo: '+1234567890',
-    deliveryDate: '2024-02-20',
-    status: 'pending'
-  },
-  {
-    id: 'DEL-002',
-    orderId: 'ORD-002',
-    agentName: 'Sarah Wilson',
-    customerName: 'John Doe',
-    address: '456 Elm St, City, Country',
-    mobileNo: '+0987654321',
-    deliveryDate: '2024-02-21',
-    status: 'assigned'
-  }
-];
+import deliveryService from '../../services/deliveryService';
 
 export default function DeliveryManagement() {
+  const [deliveries, setDeliveries] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [deliveryDetails, setDeliveryDetails] = useState({
     vehicleNo: '',
     driverName: '',
     driverContact: '',
-    address: '',
-    mobileNo: '',
-    deliveryDate: ''
+    deliveryDate: '',
+    status: '' // Added status field
   });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch deliveries from API
+  const fetchDeliveries = async () => {
+    try {
+      setLoading(true);
+      const response = await deliveryService.getDeliveries(); // API call to fetch deliveries
+      console.log(response.data);
+      setDeliveries(response.data || []);
+    } catch (error) {
+      toast.error('Error fetching deliveries: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDeliveries(); // Fetch deliveries on component mount
+  }, []);
 
   const handleEdit = (delivery) => {
-    setSelectedDelivery(delivery);
+    if (!delivery) return;
+    setSelectedDelivery(delivery); // Store the selected delivery
     setDeliveryDetails({
-      vehicleNo: delivery.vehicleNo,
-      driverName: delivery.driverName,
-      driverContact: delivery.driverContact,
-      address: delivery.address,
-      mobileNo: delivery.mobileNo,
-      deliveryDate: delivery.deliveryDate
+      _id: delivery._id || '', // Ensure the _id is stored in the state
+      vehicleNo: delivery.vehicleNo || '',
+      driverName: delivery.driverName || '',
+      driverContact: delivery.driverContact || '',
+      deliveryDate: delivery.deliveryDate || '',
+      status: delivery.status || '' // Ensure the status is also set
     });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDeliveryDetails(prev => ({
+    setDeliveryDetails((prev) => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSave = () => {
-    toast.success('Delivery details updated successfully');
-    setSelectedDelivery(null);
+  const validateForm = () => {
+    // Add basic form validation here
+    const { vehicleNo, driverName, driverContact, deliveryDate, status } = deliveryDetails;
+    if (!vehicleNo || !driverName || !driverContact || !deliveryDate || !status) {
+      toast.error('All fields are required');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const { _id, ...updatedDetails } = deliveryDetails; // Destructure '_id' from the state
+
+      console.log('Updated data without ID:', updatedDetails); // Log the updated details without the '_id'
+
+      // Now pass the ID separately and exclude it from the payload
+      await deliveryService.updateDelivery(_id, updatedDetails); // Pass _id as a URL parameter or as part of the request
+
+      toast.success('Delivery details updated successfully');
+      setSelectedDelivery(null);
+      fetchDeliveries(); // Refetch deliveries after update
+    } catch (error) {
+      toast.error('Error updating delivery: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <>
       <Card>
         <Box sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>Delivery Management</Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Delivery ID</TableCell>
-                  <TableCell>Order ID</TableCell>
-                  <TableCell>Agent Name</TableCell>
-                  <TableCell>Customer</TableCell>
-                  <TableCell>Address</TableCell>
-                  <TableCell>Mobile No.</TableCell>
-                  <TableCell>Delivery Date</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {mockDeliveries.map((delivery) => (
-                  <TableRow key={delivery.id}>
-                    <TableCell>{delivery.id}</TableCell>
-                    <TableCell>{delivery.orderId}</TableCell>
-                    <TableCell>{delivery.agentName}</TableCell>
-                    <TableCell>{delivery.customerName}</TableCell>
-                    <TableCell>{delivery.address}</TableCell>
-                    <TableCell>{delivery.mobileNo}</TableCell>
-                    <TableCell>{delivery.deliveryDate}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={delivery.status.toUpperCase()}
-                        color={delivery.status === 'assigned' ? 'success' : 'warning'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => handleEdit(delivery)}
-                      >
-                        Update Details
-                      </Button>
-                    </TableCell>
+          <Typography variant="h6" gutterBottom>
+            Delivery Management
+          </Typography>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+              <CircularProgress />
+            </Box>
+          ) : deliveries.length === 0 ? (
+            <Typography variant="body1" color="textSecondary" align="center">
+              No deliveries available.
+            </Typography>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order ID</TableCell>
+                    <TableCell>Agent Name</TableCell>
+                    <TableCell>Customer</TableCell>
+                    <TableCell>Address</TableCell>
+                    <TableCell>Mobile No.</TableCell>
+                    <TableCell>Delivery Date</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {deliveries.map((delivery) => (
+                    <TableRow key={delivery._id}>
+                      <TableCell>{delivery.orderId || 'N/A'}</TableCell>
+                      <TableCell>{delivery.orderDetails?.agent || 'N/A'}</TableCell>
+                      <TableCell>{delivery.orderDetails?.customerName || 'N/A'}</TableCell>
+                      <TableCell>{delivery.orderDetails?.address || 'N/A'}</TableCell>
+                      <TableCell>{delivery.orderDetails?.mobileNumber || 'N/A'}</TableCell>
+                      <TableCell>{delivery.deliveryDate || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={delivery.status?.toUpperCase() || 'UNKNOWN'}
+                          color={delivery.status === 'delivered' ? 'success' : 'warning'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => handleEdit(delivery)}
+                        >
+                          Update Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Box>
       </Card>
 
-      <Dialog open={!!selectedDelivery} onClose={() => setSelectedDelivery(null)}>
-        <DialogTitle>Update Delivery Details</DialogTitle>
+      <Dialog
+        open={!!selectedDelivery}
+        onClose={() => setSelectedDelivery(null)}
+        aria-labelledby="update-delivery-dialog-title"
+      >
+        <DialogTitle id="update-delivery-dialog-title">
+          Update Delivery Details
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -167,32 +212,17 @@ export default function DeliveryManagement() {
                 required
               />
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Customer Address"
-                name="address"
-                value={deliveryDetails.address}
-                onChange={handleChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Customer Mobile No."
-                name="mobileNo"
-                value={deliveryDetails.mobileNo}
-                onChange={handleChange}
-                fullWidth
-                required
-              />
-            </Grid>
+
             <Grid item xs={12}>
               <TextField
                 label="Delivery Date"
                 name="deliveryDate"
                 type="date"
-                value={deliveryDetails.deliveryDate}
+                value={
+                  deliveryDetails.deliveryDate
+                    ? new Date(deliveryDetails.deliveryDate).toLocaleDateString('en-CA') // 'en-CA' ensures the format is YYYY-MM-DD
+                    : ''
+                }
                 onChange={handleChange}
                 fullWidth
                 required
@@ -201,11 +231,38 @@ export default function DeliveryManagement() {
                 }}
               />
             </Grid>
+
+            {/* Status Dropdown */}
+            <Grid item xs={12}>
+              <FormControl fullWidth required>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  name="status"
+                  value={deliveryDetails.status}
+                  onChange={handleChange}
+                  label="Status"
+                >
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="in transit">In Transit</MenuItem>
+                  <MenuItem value="delivered">Delivered</MenuItem>
+                  <MenuItem value="cancelled">Cancelled</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedDelivery(null)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave}>Save Changes</Button>
+          <Button onClick={() => setSelectedDelivery(null)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
         </DialogActions>
       </Dialog>
     </>

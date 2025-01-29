@@ -13,15 +13,18 @@ import {
   Chip,
   TextField,
   Grid,
+  MenuItem,
 } from '@mui/material';
 import { Print, Update, LocalShipping } from '@mui/icons-material';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
 
+import { Delete, Search } from '@mui/icons-material';
 export default function DCutOpsertPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
+    search: '',
     status: '',
     page: 1,
     limit: 15
@@ -53,6 +56,12 @@ export default function DCutOpsertPage() {
     }));
   };
 
+  const handleReset = () => {
+    setFilters({
+      search: '',
+      type: '',
+    });
+  };
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await adminService.updateProductionStatus('d-cut-opsert', orderId, newStatus);
@@ -75,26 +84,37 @@ export default function DCutOpsertPage() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>D-Cut Opsert Production</Typography>
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            select
-            label="Status"
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            SelectProps={{ native: true }}
-          >
-            <option value="">All</option>
-            <option value="Pending">Pending</option>
-            <option value="In_progress">In Progress</option>
-            <option value="Completed">Completed</option>
-          </TextField>
-        </Grid>
-      </Grid>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search..."
+          name="search"
+          value={filters.search}
+          onChange={handleFilterChange}
+          InputProps={{
+            startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />,
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          name="status"
+          value={filters.type}
+          onChange={handleFilterChange}
+          sx={{ minWidth: 120 }}
+        >
+          <MenuItem value="all">All Types</MenuItem>
+          <MenuItem value="pending">Pending</MenuItem>
+          <MenuItem value="in_progress">In Progress</MenuItem>
+          <MenuItem value="completed">Completed</MenuItem>
+        </TextField>
+
+        <Button variant="outlined" onClick={handleReset}>
+          Reset
+        </Button>
+      </Box>
+
 
       <Card>
         <TableContainer>
@@ -175,6 +195,6 @@ export default function DCutOpsertPage() {
           )}
         </TableContainer>
       </Card>
-    </Box>
+    </Box >
   );
 }

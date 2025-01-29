@@ -136,7 +136,7 @@ export default function RawMaterials() {
 
   const handleDownloadData = (category) => {
     const doc = new jsPDF();
-    
+
     // Add title
     doc.setFontSize(16);
     doc.text(`${categoryOptions.find(opt => opt.value === category.category)?.label} Details`, 14, 15);
@@ -153,7 +153,7 @@ export default function RawMaterials() {
     // Add subcategories table
     if (category.subcategories?.length > 0) {
       doc.text('Subcategories:', 14, 90);
-      
+
       const tableColumn = ["Fabric Color", "Roll Size", "GSM", "Fabric Quality", "Quantity (kg)"];
       const tableRows = category.subcategories.map(sub => [
         sub.fabricColor,
@@ -281,9 +281,7 @@ export default function RawMaterials() {
 
   const renderActions = (category) => (
     <>
-      <IconButton size="small" color="primary">
-        <Edit />
-      </IconButton>
+
       <IconButton
         size="small"
         color="error"
@@ -291,8 +289,8 @@ export default function RawMaterials() {
       >
         <Delete />
       </IconButton>
-      <IconButton 
-        size="small" 
+      <IconButton
+        size="small"
         color="primary"
         onClick={() => handleViewSubcategories(category)}
       >

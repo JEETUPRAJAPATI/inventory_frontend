@@ -73,15 +73,15 @@ export default function DeliveryList({ status }) {
   };
 
   const filteredDeliveries = mockDeliveries.filter(delivery => {
-    const matchesStatus = status === 'completed' 
+    const matchesStatus = status === 'completed'
       ? delivery.status === 'completed'
       : delivery.status !== 'completed';
-    
+
     const matchesSearch = delivery.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         delivery.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      delivery.id.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesDate = !dateFilter || delivery.deliveryDate === dateFilter;
-    
+
     return matchesStatus && matchesSearch && matchesDate;
   });
 
@@ -92,7 +92,7 @@ export default function DeliveryList({ status }) {
           <Typography variant="h6" gutterBottom>
             {status === 'completed' ? 'Completed Deliveries' : 'Pending Deliveries'}
           </Typography>
-          
+
           <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
             <TextField
               size="small"
@@ -145,7 +145,7 @@ export default function DeliveryList({ status }) {
                     >
                       <Visibility />
                     </IconButton>
-                    
+
                     {delivery.status === 'pending' && (
                       <>
                         <IconButton

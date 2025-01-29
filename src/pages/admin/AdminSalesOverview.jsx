@@ -12,13 +12,15 @@ import {
   Typography,
   Chip,
   TextField,
+  IconButton,
   Box,
   MenuItem,
 } from '@mui/material';
-import { Delete, Search } from '@mui/icons-material';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
-
+import OrderForm from '../../components/sales/orders/OrderForm';
+import DeleteConfirmDialog from '../../components/common/DeleteConfirmDialog';
+import { Edit, Delete, Search } from '@mui/icons-material';
 export default function AdminSalesOverview() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,15 +29,17 @@ export default function AdminSalesOverview() {
     status: '',
     type: 'all',
   });
+  const [formOpen, setFormOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const response = await adminService.getSales(filters);
-      console.log('Sales response:', response); // Debug log
       setOrders(response?.data || []);
     } catch (error) {
-      console.error('Error fetching sales:', error); // Debug log
       toast.error('Error fetching sales data');
       setOrders([]);
     } finally {
@@ -55,6 +59,14 @@ export default function AdminSalesOverview() {
     }));
   };
 
+  const handleResetFilters = () => {
+    setFilters({
+      search: '',
+      status: '',
+      type: 'all',
+    });
+  };
+
   const handleDelete = async (orderId) => {
     try {
       await adminService.deleteSalesOrder(orderId);
@@ -65,15 +77,38 @@ export default function AdminSalesOverview() {
     }
   };
 
-  const handleResetFilters = () => {
-    setFilters({
-      search: '',
-      status: '',
-      type: 'all',
-    });
+  const handleEdit = (order) => {
+    setSelectedOrder(order);
+    setFormOpen(true);
   };
 
-  // Calculate summary metrics
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (selectedOrder) {
+        await adminService.updateSalesOrder(selectedOrder._id, formData);
+        toast.success('Order updated successfully');
+      } else {
+        await adminService.addSalesOrder(formData);
+        toast.success('Order created successfully');
+      }
+      setFormOpen(false);
+      fetchOrders();
+    } catch (error) {
+      toast.error(error.message || 'Error updating order');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await adminService.deleteSalesOrder(orderToDelete._id);
+      setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderToDelete._id));
+      toast.success('Order deleted successfully');
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete order');
+    }
+  };
+
   const totalOrders = orders.length;
   const pendingOrders = orders.filter((order) => order.status === 'pending').length;
   const completedOrders = orders.filter((order) => order.status === 'completed').length;
@@ -102,7 +137,7 @@ export default function AdminSalesOverview() {
         >
           <MenuItem value="all">All Types</MenuItem>
           <MenuItem value="pending">Pending</MenuItem>
-          <MenuItem value="in_progress">In Progress</MenuItem>
+          <MenuItem value="cancelled">Cancelled</MenuItem>
           <MenuItem value="completed">Completed</MenuItem>
         </TextField>
 
@@ -132,7 +167,7 @@ export default function AdminSalesOverview() {
                   <TableCell>Quantity</TableCell>
                   <TableCell>Amount</TableCell>
                   <TableCell>Status</TableCell>
-                  {/* <TableCell>Action</TableCell> */}
+                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -157,16 +192,26 @@ export default function AdminSalesOverview() {
                         size="small"
                       />
                     </TableCell>
-                    {/* <TableCell>
-                      <Button
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => handleEdit(order)}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
                         size="small"
                         color="error"
-                        startIcon={<Delete />}
-                        onClick={() => handleDelete(order._id)}
+                        onClick={() => {
+                          setOrderToDelete(order);
+                          setDeleteDialogOpen(true);
+                        }}
                       >
-                        Delete
-                      </Button>
-                    </TableCell> */}
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+
                   </TableRow>
                 ))}
               </TableBody>
@@ -174,6 +219,21 @@ export default function AdminSalesOverview() {
           )}
         </TableContainer>
       </Card>
+
+      <OrderForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSubmit={handleFormSubmit}
+        order={selectedOrder}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Order"
+        content="Are you sure you want to delete this order? This action cannot be undone."
+      />
     </Box>
   );
 }
