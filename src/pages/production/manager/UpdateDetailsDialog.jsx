@@ -12,15 +12,25 @@ export default function UpdateDetailsDialog({ open, onClose, record, type, order
     remarks: '',
   });
 
-  // Fetch the order details when the record is updated
   useEffect(() => {
-    if (record) {
+    console.log('record list', record);
+
+    if (record && record.production_details) {
       setFormData({
-        roll_size: record.production_details?.roll_size || '',
-        cylinder_size: record.production_details?.cylinder_size || '',
-        quantity_kgs: record.production_details?.quantity_kgs || '',
-        quantity_rolls: record.production_details?.quantity_rolls || '',
-        remarks: record.remarks || '',
+        roll_size: record.production_details.roll_size || '',
+        cylinder_size: record.production_details.cylinder_size || '',
+        quantity_kgs: record.production_details.quantity_kgs || '',
+        quantity_rolls: record.production_details.quantity_rolls || '',
+        remarks: record.remarks || '', // assuming remarks is at the same level as production_details
+      });
+    } else {
+      // Set empty values if production_details is null
+      setFormData({
+        roll_size: '',
+        cylinder_size: '',
+        quantity_kgs: '',
+        quantity_rolls: '',
+        remarks: '',
       });
     }
   }, [record]); // Only run when the record changes
@@ -36,7 +46,6 @@ export default function UpdateDetailsDialog({ open, onClose, record, type, order
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Assuming the record._id and orderId are correct, and passing formData for update
       const updatedRecord = await productionService.updateProductionRecord(record._id, formData, orderId);
       toast.success('Record updated successfully');
       onClose(); // Close the dialog after success

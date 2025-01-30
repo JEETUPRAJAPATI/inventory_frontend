@@ -30,7 +30,7 @@ const getProductionRecord = async (orderId) => {
     }
 };
 
-const updateProductionRecord = async (id, data, order_id) => {
+const updateProductionRecord = async (data, order_id) => {
     try {
         const response = await api.put(`/production/manager/update/${order_id}`, {
             ...data,
