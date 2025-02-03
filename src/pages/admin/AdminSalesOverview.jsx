@@ -165,7 +165,6 @@ export default function AdminSalesOverview() {
                   <TableCell>Job Name</TableCell>
                   <TableCell>Bag Type</TableCell>
                   <TableCell>Quantity</TableCell>
-                  <TableCell>Amount</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
@@ -178,7 +177,6 @@ export default function AdminSalesOverview() {
                     <TableCell>{order.jobName || 'N/A'}</TableCell>
                     <TableCell>{order.bagDetails?.type || 'N/A'}</TableCell>
                     <TableCell>{order.quantity || '0'}</TableCell>
-                    <TableCell>₹{order.totalAmount?.toLocaleString() || '0'}</TableCell>
                     <TableCell>
                       <Chip
                         label={order.status?.toUpperCase() || 'UNKNOWN'}

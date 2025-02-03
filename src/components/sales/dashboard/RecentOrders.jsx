@@ -60,7 +60,7 @@ export default function RecentOrders() {
     // Fetch orders from API
     const fetchOrders = async () => {
       try {
-        const response = await orderService.getOrders();
+        const response = await orderService.recentOrders();
         setOrders(response.data);
       } catch (error) {
         console.error('Error fetching recent orders:', error);

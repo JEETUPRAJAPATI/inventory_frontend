@@ -6,19 +6,19 @@ import UpdateDetailsDialog from './UpdateDetailsDialog';
 import FullDetailsDialog from './FullDetailsDialog';
 
 export default function DCutProductionPage() {
-
   function ProductionTable({ type }) {
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [fullDetailsDialogOpen, setFullDetailsDialogOpen] = useState(false); // Separate state for full details dialog
+    const [fullDetailsDialogOpen, setFullDetailsDialogOpen] = useState(false);
+    const [orderIdForDialog, setOrderIdForDialog] = useState(null); // To store the selected orderId
 
+    // Fetch records on mount
     useEffect(() => {
       fetchRecords();
     }, []);
 
-    // Fetch records inside useEffect
     const fetchRecords = async () => {
       try {
         setLoading(true);
@@ -31,7 +31,7 @@ export default function DCutProductionPage() {
         }
       } catch (error) {
         console.error('Error fetching records:', error);
-        setRecords([]); // Ensure empty array is set on error
+        setRecords([]);
       } finally {
         setLoading(false);
       }
@@ -40,16 +40,42 @@ export default function DCutProductionPage() {
     const handleViewFullDetails = async (orderId) => {
       try {
         const fullDetails = await orderService.getFullOrderDetails(orderId);
-        setSelectedRecord(fullDetails.data); // Set the full details data to selectedRecord
-        setFullDetailsDialogOpen(true); // Open the full details dialog
+        setSelectedRecord(fullDetails.data);
+        setFullDetailsDialogOpen(true);
       } catch (error) {
         console.error('Error fetching full details:', error);
       }
     };
 
-    const handleUpdate = (record) => {
-      setSelectedRecord(record);
-      setDialogOpen(true);
+    const handleUpdate = (orderId) => {
+      // Set the orderId immediately for dialog
+      setOrderIdForDialog(orderId);
+
+      // Fetch the production record before opening the dialog
+      orderService.getProductionRecord(orderId)
+        .then((record) => {
+          setSelectedRecord(record); // Set the record from API response
+          setDialogOpen(true); // Open the update dialog
+        })
+        .catch((error) => {
+          console.error('Error fetching production record:', error);
+        });
+    };
+
+    const handleSave = async (updatedRecord) => {
+      try {
+        const response = await orderService.updateDcutOrder(updatedRecord); // Assuming you have an update method
+        if (response.data) {
+          setRecords((prevRecords) =>
+            prevRecords.map((record) =>
+              record.orderId === updatedRecord.orderId ? updatedRecord : record
+            )
+          );
+          setDialogOpen(false); // Close the dialog after saving
+        }
+      } catch (error) {
+        console.error('Error saving updated record:', error);
+      }
     };
 
     return (
@@ -88,7 +114,7 @@ export default function DCutProductionPage() {
                     <TableCell>{record.bagDetails?.color || 'N/A'}</TableCell>
                     <TableCell>{record.fabricQuality || 'N/A'}</TableCell>
                     <TableCell>
-                      <IconButton color="primary" size="small" onClick={() => handleUpdate(record)}>
+                      <IconButton color="primary" size="small" onClick={() => handleUpdate(record.orderId)}>
                         <Edit />
                       </IconButton>
                       <IconButton color="secondary" size="small" onClick={() => handleViewFullDetails(record.orderId)}>
@@ -102,17 +128,20 @@ export default function DCutProductionPage() {
           </TableContainer>
         )}
 
+        {/* Update Dialog */}
         <UpdateDetailsDialog
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
-          record={selectedRecord}
+          record={selectedRecord}  // Pass the entire record object
           type={type}
-          orderId={selectedRecord?.orderId}
+          orderId={orderIdForDialog}
+          onSave={handleSave}  // Pass the handleSave function to the dialog
         />
 
+        {/* Full Details Dialog */}
         <FullDetailsDialog
-          open={fullDetailsDialogOpen} // Use separate state for full details dialog
-          onClose={() => setFullDetailsDialogOpen(false)} // Close full details dialog when clicked
+          open={fullDetailsDialogOpen}
+          onClose={() => setFullDetailsDialogOpen(false)}
           record={selectedRecord}
         />
       </Box>

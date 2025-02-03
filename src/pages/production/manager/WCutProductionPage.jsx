@@ -13,6 +13,7 @@ export default function WCutProductionPage() {
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
     const [fullDetailsDialogOpen, setFullDetailsDialogOpen] = useState(false);
+    const [orderIdForDialog, setOrderIdForDialog] = useState(null); // To store the selected orderId
 
     useEffect(() => {
       fetchRecords();
@@ -31,6 +32,9 @@ export default function WCutProductionPage() {
     };
 
     const handleUpdate = (orderId) => {
+      // Set the orderId immediately for dialog
+      setOrderIdForDialog(orderId);
+
       // Fetch the production record before opening the dialog
       orderService.getProductionRecord(orderId)
         .then((record) => {
@@ -99,13 +103,15 @@ export default function WCutProductionPage() {
           </TableContainer>
         )}
 
+        {/* Pass the orderId from orderIdForDialog state */}
         <UpdateDetailsDialog
           open={updateDialogOpen}
           onClose={() => setUpdateDialogOpen(false)}
           record={selectedRecord}
           type={type}
-          orderId={selectedRecord?.orderId}
+          orderId={orderIdForDialog} // Ensure orderId is always passed to dialog
         />
+
         <FullDetailsDialog
           open={fullDetailsDialogOpen}
           onClose={() => setFullDetailsDialogOpen(false)}

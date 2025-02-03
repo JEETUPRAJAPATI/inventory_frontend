@@ -6,6 +6,11 @@ const orderService = {
     return response.data;
   },
 
+  recentOrders: async () => {
+    const response = await api.get('/sales/recentOrders');
+    return response.data;
+  },
+
   createOrder: async (orderData) => {
     const response = await api.post('/sales/orders', orderData);
     return response.data;

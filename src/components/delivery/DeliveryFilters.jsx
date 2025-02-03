@@ -6,8 +6,18 @@ export default function DeliveryFilters({ filters, onFilterChange }) {
     onFilterChange(prev => ({
       ...prev,
       [name]: value,
-      page: 1 // Reset page when filters change
+      page: 1, // Reset page when filters change
     }));
+  };
+
+  const handleReset = () => {
+    // Reset to default filter values
+    onFilterChange({
+      search: '',
+      status: 'all',
+      timeRange: 'month', // Ensure 'timeRange' gets reset to default (e.g., 'all')
+      page: 1,          // Optional: reset page to 1 when resetting filters
+    });
   };
 
   return (
@@ -21,9 +31,10 @@ export default function DeliveryFilters({ filters, onFilterChange }) {
         onChange={handleChange}
         sx={{ minWidth: 120 }}
       >
-        <MenuItem value="Pending">Pending</MenuItem>
-        <MenuItem value="In Transit">In Transit</MenuItem>
-        <MenuItem value="Delivered">Delivered</MenuItem>
+        <MenuItem value="pending">Pending</MenuItem>
+        <MenuItem value="in_transit">In Transit</MenuItem>
+        <MenuItem value="delivered">Delivered</MenuItem>
+        <MenuItem value="all">All</MenuItem> {/* Added 'All' option for resetting status */}
       </TextField>
 
       <TextField
@@ -39,13 +50,10 @@ export default function DeliveryFilters({ filters, onFilterChange }) {
         <MenuItem value="week">This Week</MenuItem>
         <MenuItem value="month">This Month</MenuItem>
       </TextField>
+
       <Button
         variant="outlined"
-        onClick={() => onFilterChange({
-          search: '',
-          status: 'all',
-          type: 'all'
-        })}
+        onClick={handleReset}
       >
         Reset
       </Button>

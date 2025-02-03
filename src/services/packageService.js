@@ -13,6 +13,7 @@ export const fetchOrders = async () => {
         throw new Error(error.response?.data?.message || 'Error fetching orders');
     }
 };
+
 /**
  * Function to fetch package details
  * @param {Object} filters - Filters to apply when fetching packages
@@ -57,6 +58,16 @@ export const addPackage = async (packageData) => {
     }
 };
 
+export const createPackage = async (payload) => {
+    try {
+        const response = await api.post(`${PACKAGE_API_URL}/order/addOrder/${payload.order_id}`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error response:', error.response);  // Log the full error response
+        throw new Error(error.response?.data?.message || 'Failed to add package');
+    }
+};
+
 /**
  * Function to delete a package
  * @param {string} packageId - The ID of the package to delete
@@ -74,5 +85,6 @@ export default {
     fetchPackagesByOrderId,
     updatePackage,
     addPackage,
+    createPackage,
     deletePackage,
 };

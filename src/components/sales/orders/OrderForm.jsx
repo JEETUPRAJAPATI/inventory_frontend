@@ -95,8 +95,10 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
 
   const handleMobileNumberSearch = async (event, newValue) => {
     if (newValue) {
+      // If the new value is in the list of existing mobile numbers
       if (mobileNumbers.includes(newValue)) {
         try {
+          // Fetch order details based on the mobile number
           const response = await orderService.getOrderByMobileNumber(newValue);
           if (response.success && response.data.length > 0) {
             const orderData = response.data[0];
@@ -115,13 +117,12 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
         setFormData(prev => ({
           ...prev,
           mobileNumber: newValue,
-          customerName: '', // Resetting other fields if new number entered
+          customerName: '',
           email: '',
           address: '',
         }));
       }
     } else {
-      // If the user clears the mobile number input, reset the customer fields
       setFormData(prev => ({
         ...prev,
         mobileNumber: '',
@@ -131,7 +132,6 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
       }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -180,6 +180,12 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
               <Autocomplete
                 value={formData.mobileNumber}
                 onChange={handleMobileNumberSearch}
+                onInputChange={(event, newValue) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    mobileNumber: newValue,
+                  }));
+                }}
                 options={mobileNumbers}
                 getOptionLabel={(option) => option}
                 freeSolo
@@ -194,7 +200,6 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
                 )}
               />
             </Grid>
-
             <Grid item xs={12}>
               <FormInput
                 label="Address"

@@ -40,7 +40,7 @@ export default function PackagingManagement() {
   const [packageListOpen, setPackageListOpen] = useState(false);
   const [packages, setPackages] = useState([]);
   const [newPackage, setNewPackage] = useState(initialPackageState); // For editing package
-
+  const [OrderPackageOpen, setOrderPackageOpen] = useState(false);
   // Fetch orders from the service
   useEffect(() => {
     const fetchOrders = async () => {
@@ -183,7 +183,49 @@ export default function PackagingManagement() {
     }
   };
 
+  const createPackages = async () => {
+    console.log('new package data', newPackage);
+    console.log('order id', selectedOrder);
 
+    // Prepare the payload to include the orderId and new package data
+    const payload = {
+      order_id: selectedOrder.orderId, // Add orderId to the payload
+      package_details: [{
+        length: parseFloat(newPackage.length),  // Ensure numbers are passed
+        width: parseFloat(newPackage.width),
+        height: parseFloat(newPackage.height),
+        weight: parseFloat(newPackage.weight),
+      }],
+    };
+    console.log('payload', payload);
+    try {
+      // Call the service method with the prepared payload
+      const response = await PackageService.createPackage(payload);
+      console.log('Package added successfully:', response);
+      const fetchedPackages = await PackageService.fetchPackagesByOrderId(selectedOrder.orderId);
+      console.log('Refresh Data Fetched order list', fetchedPackages);
+      setPackages(fetchedPackages || []);
+      handleCloseDialog();  // Close the dialog on success
+    } catch (error) {
+      // Log error in case the request fails
+      console.error('Failed to add package:', error);
+      alert(`Failed to add package: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+
+  const handleCloseDialog = () => {
+    setOrderPackageOpen(false);
+    setNewPackage({
+      length: '',
+      width: '',
+      height: '',
+      weight: ''
+    });
+  };
+  const handleOpenDialog = () => {
+    setOrderPackageOpen(true);
+  };
   const generatePackageLabel = (pkg) => {
 
     console.log('pkg', pkg);
@@ -301,9 +343,17 @@ export default function PackagingManagement() {
         maxWidth="md"
         fullWidth
       >
+
         <DialogTitle>
           Packages for Order {selectedOrder?.id}
+
         </DialogTitle>
+        <TableCell>
+          <Button size="small" variant="outlined" onClick={handleOpenDialog}>
+            Add New Packages
+          </Button>
+        </TableCell>
+
         <DialogContent>
           <TableContainer>
             <Table>
@@ -353,6 +403,57 @@ export default function PackagingManagement() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPackageListOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Package Dimensions Dialog */}
+      <Dialog open={OrderPackageOpen} onClose={handleCloseDialog}>
+        <DialogTitle>Add New Package Dimensions</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={6}>
+              <TextField
+                label="Length (cm)"
+                type="number"
+                value={newPackage.length}
+                onChange={(e) => setNewPackage({ ...newPackage, length: e.target.value })}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Width (cm)"
+                type="number"
+                value={newPackage.width}
+                onChange={(e) => setNewPackage({ ...newPackage, width: e.target.value })}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Height (cm)"
+                type="number"
+                value={newPackage.height}
+                onChange={(e) => setNewPackage({ ...newPackage, height: e.target.value })}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Weight (kg)"
+                type="number"
+                value={newPackage.weight}
+                onChange={(e) => setNewPackage({ ...newPackage, weight: e.target.value })}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button variant="contained" onClick={createPackages}>
+            Add Package
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -408,6 +509,21 @@ export default function PackagingManagement() {
           <Button variant="contained" onClick={handleUpdatePackage}>Update Package</Button>
         </DialogActions>
       </Dialog>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {/* Add Package Modal */}
       <Dialog
         open={addPackageOpen}

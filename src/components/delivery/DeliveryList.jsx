@@ -12,17 +12,29 @@ import {
   Chip,
   Box,
   Button,
-  TextField,
-  MenuItem,
-  Select,
+  Modal,
   FormControl,
-  InputLabel
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { Visibility } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import deliveryService from '../../services/deliveryService';
 import DeliveryDetailsModal from './DeliveryDetailsModal';
 import DeliveryFilters from './DeliveryFilters';
+
+// Modal style
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+};
 
 export default function DeliveryList() {
   const [deliveries, setDeliveries] = useState([]);
@@ -32,10 +44,13 @@ export default function DeliveryList() {
     status: '',
     timeRange: 'month',
     page: 1,
-    limit: 10
+    limit: 10,
   });
-  const [statusToUpdate, setStatusToUpdate] = useState(''); // State for editing the status
+  const [statusToUpdate, setStatusToUpdate] = useState('');
+  const [updateStatusModalOpen, setUpdateStatusModalOpen] = useState(false);
+  const [deliveryToUpdate, setDeliveryToUpdate] = useState(null);
 
+  // Fetch deliveries
   const fetchDeliveries = async () => {
     try {
       setLoading(true);
@@ -52,26 +67,36 @@ export default function DeliveryList() {
     fetchDeliveries();
   }, [filters]);
 
+  // Handle viewing delivery details
   const handleView = async (deliveryId) => {
     try {
       const delivery = await deliveryService.getDeliveryById(deliveryId);
       setSelectedDelivery(delivery);
-      setStatusToUpdate(delivery.status); // Set the current status for editing
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  const handleStatusUpdate = async (deliveryId) => {
+  // Handle opening the update status modal
+  const handleStatusUpdateClick = (delivery) => {
+    setDeliveryToUpdate(delivery);
+    setStatusToUpdate(delivery.status);
+    setUpdateStatusModalOpen(true);
+  };
+
+  // Handle updating the delivery status
+  const handleStatusUpdate = async () => {
     try {
-      await deliveryService.updateDeliveryStatus(deliveryId, statusToUpdate);
+      await deliveryService.updateDeliveryStatus(deliveryToUpdate._id, statusToUpdate);
       toast.success(`Delivery status updated to ${statusToUpdate}`);
       fetchDeliveries();
+      setUpdateStatusModalOpen(false); // Close the modal
     } catch (error) {
       toast.error(error.message);
     }
   };
 
+  // Get status color for chips
   const getStatusColor = (status) => {
     const colors = {
       pending: 'warning',
@@ -112,7 +137,11 @@ export default function DeliveryList() {
                     <TableCell>{delivery.orderId || 'N/A'}</TableCell>
                     <TableCell>{delivery.orderDetails?.customerName || 'N/A'}</TableCell>
                     <TableCell>{delivery.orderDetails?.mobileNumber || 'N/A'}</TableCell>
-                    <TableCell>{delivery.deliveryDate ? new Date(delivery.deliveryDate).toLocaleDateString() : 'N/A'}</TableCell>
+                    <TableCell>
+                      {delivery.deliveryDate
+                        ? new Date(delivery.deliveryDate).toLocaleDateString()
+                        : 'N/A'}
+                    </TableCell>
                     <TableCell>
                       <Chip
                         label={delivery.status || 'N/A'}
@@ -130,30 +159,15 @@ export default function DeliveryList() {
                       </IconButton>
 
                       {delivery.status !== 'delivered' && (
-                        <>
-                          <FormControl sx={{ minWidth: 120, ml: 1 }} size="small">
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                              value={statusToUpdate}
-                              onChange={(e) => setStatusToUpdate(e.target.value)}
-                              label="Status"
-                            >
-                              <MenuItem value="pending">Pending</MenuItem>
-                              <MenuItem value="in transit">In Transit</MenuItem>
-                              <MenuItem value="delivered">Delivered</MenuItem>
-                              <MenuItem value="cancelled">Cancelled</MenuItem>
-                            </Select>
-                          </FormControl>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color="primary"
-                            onClick={() => handleStatusUpdate(delivery._id)}
-                            sx={{ ml: 1 }}
-                          >
-                            Update Status
-                          </Button>
-                        </>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleStatusUpdateClick(delivery)}
+                          sx={{ ml: 1 }}
+                        >
+                          Update Status
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -164,11 +178,45 @@ export default function DeliveryList() {
         </TableContainer>
       </Card>
 
+      {/* Delivery Details Modal */}
       <DeliveryDetailsModal
         open={!!selectedDelivery}
         delivery={selectedDelivery}
         onClose={() => setSelectedDelivery(null)}
       />
+
+      {/* Update Status Modal */}
+      <Modal
+        open={updateStatusModalOpen}
+        onClose={() => setUpdateStatusModalOpen(false)}
+      >
+        <Box sx={modalStyle}>
+          <Typography variant="h6" gutterBottom>
+            Update Delivery Status
+          </Typography>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusToUpdate}
+              onChange={(e) => setStatusToUpdate(e.target.value)}
+              label="Status"
+            >
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="in_transit">In Transit</MenuItem>
+              <MenuItem value="delivered">Delivered</MenuItem>
+              <MenuItem value="cancelled">Cancelled</MenuItem>
+            </Select>
+          </FormControl>
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button onClick={() => setUpdateStatusModalOpen(false)} sx={{ mr: 1 }}>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleStatusUpdate}>
+              Update
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </>
   );
 }

@@ -45,8 +45,12 @@ export default function UpdateDetailsDialog({ open, onClose, record, type, order
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log('formData', formData);
+    console.log('order id', record);
+    console.log('new order id ', orderId);
     try {
-      const updatedRecord = await productionService.updateProductionRecord(record._id, formData, orderId);
+      const updatedRecord = await productionService.updateProductionRecord(formData, orderId);
       toast.success('Record updated successfully');
       onClose(); // Close the dialog after success
     } catch (error) {
