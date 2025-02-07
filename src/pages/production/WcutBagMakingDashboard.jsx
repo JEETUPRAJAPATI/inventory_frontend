@@ -3,8 +3,8 @@ import { Box, Card, Button, Typography, Grid, Divider } from '@mui/material';
 import { Dashboard, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../contexts/ColorModeContext';
-import WCutBagMakingOrderList from './components/WcutBagMakingOrderList';
 import WcutBagMakingService from '../../services/wcutBagMakingService';
+import WCutBagMakingOrderList from './components/WcutBagMakingOrderList';
 
 export default function BagMakingDashboard({ type }) {
     const navigate = useNavigate();
