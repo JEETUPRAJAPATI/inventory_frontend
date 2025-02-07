@@ -1,41 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Card,
   Button,
   Typography,
-  AppBar,
-  Toolbar,
-  IconButton,
-  useTheme,
   Grid,
-  Container,
   Divider
 } from '@mui/material';
 import {
   Assessment,
-  ExitToApp,
-  Brightness4,
-  Brightness7,
   Dashboard
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../contexts/ColorModeContext';
-import { useAuth } from '../../hooks/useAuth';
 import FlexoOrderList from './components/FlexoOrderList';
+import OrderService from '../../services/wcutBagFlexoService';
 
 export default function FlexoDashboard() {
   const navigate = useNavigate();
-  const theme = useTheme();
   const { toggleColorMode } = useColorMode();
-  const { logout } = useAuth();
   const [activeStatus, setActiveStatus] = useState('pending');
+  const [orders, setOrders] = useState([]);
+  const [noOrdersFound, setNoOrdersFound] = useState(false);
+
+  const fetchOrders = (status) => {
+    OrderService.listOrders(status)
+      .then((data) => {
+        if (data.success && data.data?.length) {
+          setOrders(data.data);
+          setNoOrdersFound(false);
+        } else {
+          setOrders([]);
+          setNoOrdersFound(true);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        setOrders([]);
+        setNoOrdersFound(true);
+      });
+  };
+
+  useEffect(() => {
+    fetchOrders(activeStatus);
+  }, [activeStatus]);
 
   return (
     <Box sx={{ pb: 7 }}>
-
-
-      <Box>
+      <Box sx={{ mt: 2 }}>
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={6}>
             <Button
@@ -68,38 +80,21 @@ export default function FlexoDashboard() {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
-              <Grid item xs={4}>
-                <Button
-                  variant={activeStatus === 'pending' ? 'contained' : 'outlined'}
-                  onClick={() => setActiveStatus('pending')}
-                  fullWidth
-                >
-                  Pending
-                </Button>
-              </Grid>
-              <Grid item xs={4}>
-                <Button
-                  variant={activeStatus === 'in_progress' ? 'contained' : 'outlined'}
-                  onClick={() => setActiveStatus('in_progress')}
-                  fullWidth
-                >
-                  Active
-                </Button>
-              </Grid>
-              <Grid item xs={4}>
-                <Button
-                  variant={activeStatus === 'completed' ? 'contained' : 'outlined'}
-                  onClick={() => setActiveStatus('completed')}
-                  fullWidth
-                >
-                  Done
-                </Button>
-              </Grid>
+              {['pending', 'in_progress', 'completed'].map((status) => (
+                <Grid item xs={4} key={status}>
+                  <Button
+                    variant={activeStatus === status ? 'contained' : 'outlined'}
+                    onClick={() => setActiveStatus(status)}
+                    fullWidth
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </Button>
+                </Grid>
+              ))}
             </Grid>
           </Box>
         </Card>
-
-        <FlexoOrderList status={activeStatus} />
+        <FlexoOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound} />
       </Box>
     </Box>
   );

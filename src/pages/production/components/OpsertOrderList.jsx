@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -11,129 +12,39 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import { QrCodeScanner, Update, LocalShipping, Print } from '@mui/icons-material';
+import { Print, Update, LocalShipping } from '@mui/icons-material';
 import toast from 'react-hot-toast';
-import { opsertOrders } from '../../../data/opsertData';
+import OrderService from '../../../services/dcutOpsertService.js';
 
-export default function OpsertOrderList({ status }) {
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'warning',
-      in_progress: 'info',
-      completed: 'success',
-    };
-    return colors[status] || 'default';
+export default function OpsertOrderList({ orders, status, noOrdersFound, onStatusUpdated }) {
+  const getStatusColor = (status) => ({
+    pending: 'warning',
+    in_progress: 'info',
+    completed: 'success',
+  }[status] || 'default');
+
+  const updateOrderStatus = (orderId, newStatus, remarks) => {
+    OrderService.updateOrderStatus(orderId, newStatus, remarks)
+      .then(() => {
+        toast.success(`Order marked as ${newStatus.replace('_', ' ')}`);
+        onStatusUpdated();
+      })
+      .catch(() => {
+        toast.error('Failed to update order status');
+      });
   };
-
-  const handleStartPrinting = (orderId) => {
-    toast.success('Printing process started');
-  };
-
-  const handleUpdateStatus = (orderId) => {
-    toast.success('Order status updated successfully');
-  };
-
   const handleMoveToDelivery = (orderId) => {
-    toast.success('Order moved to Delivery section');
+    OrderService.moveToDelivery(orderId)
+      .then(() => {
+        toast.success('Order moved to delivery');
+        onStatusUpdated();
+      })
+      .catch((error) => {
+        toast.error('Failed to move to delivery');
+      });
   };
-
-  const filteredOrders = opsertOrders.filter((order) => order.status === status);
-
-  // Mobile card view
-  const MobileOrderCard = ({ order }) => (
-    <Card sx={{ mb: 2, p: 2 }}>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          Order ID
-        </Typography>
-        <Typography variant="body1">{order.order_id}</Typography>
-      </Box>
-
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          Job Name
-        </Typography>
-        <Typography variant="body1">{order.job_name}</Typography>
-      </Box>
-
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          Details
-        </Typography>
-        <Typography variant="body2">
-          Type: {order.bag_type}
-          <br />
-          Color: {order.bag_color}
-          <br />
-          Print Type: {order.print_type}
-          <br />
-          Print Color: {order.print_color}
-          <br />
-          Size: {order.bag_size}
-        </Typography>
-      </Box>
-
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          Status
-        </Typography>
-        <Chip
-          label={order.status.replace('_', ' ').toUpperCase()}
-          color={getStatusColor(order.status)}
-          size="small"
-        />
-      </Box>
-
-      <Box sx={{ mt: 2 }}>
-        {order.status === 'pending' && (
-          <Button
-            startIcon={<Print />}
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={() => handleStartPrinting(order.id)}
-            sx={{ mb: 1 }}
-          >
-            Start Printing
-          </Button>
-        )}
-        {order.status === 'in_progress' && (
-          <Button
-            startIcon={<Update />}
-            variant="contained"
-            color="success"
-            fullWidth
-            onClick={() => handleUpdateStatus(order.id)}
-            sx={{ mb: 1 }}
-          >
-            Complete Order
-          </Button>
-        )}
-        {order.status === 'completed' && (
-          <Button
-            startIcon={<LocalShipping />}
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={() => handleMoveToDelivery(order.id)}
-            sx={{ mb: 1 }}
-          >
-            Move to Delivery
-          </Button>
-        )}
-      </Box>
-    </Card>
-  );
-
   return (
     <Box>
-      {/* Mobile View */}
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        {filteredOrders.map((order) => (
-          <MobileOrderCard key={order.id} order={order} />
-        ))}
-      </Box>
-
       {/* Desktop View */}
       <Box sx={{ display: { xs: 'none', md: 'block' } }}>
         <TableContainer component={Card}>
@@ -144,71 +55,77 @@ export default function OpsertOrderList({ status }) {
                 <TableCell>Job Name</TableCell>
                 <TableCell>Bag Type</TableCell>
                 <TableCell>Bag Colour</TableCell>
-                <TableCell>Print Type</TableCell>
                 <TableCell>Print Colour</TableCell>
                 <TableCell>Bag Size</TableCell>
                 <TableCell>Quantity</TableCell>
-                <TableCell>Remarks</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>{order.order_id}</TableCell>
-                  <TableCell>{order.job_name}</TableCell>
-                  <TableCell>{order.bag_type}</TableCell>
-                  <TableCell>{order.bag_color}</TableCell>
-                  <TableCell>{order.print_type}</TableCell>
-                  <TableCell>{order.print_color}</TableCell>
-                  <TableCell>{order.bag_size}</TableCell>
-                  <TableCell>{order.quantity}</TableCell>
-                  <TableCell>{order.remarks || 'N/A'}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={order.status.replace('_', ' ').toUpperCase()}
-                      color={getStatusColor(order.status)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {order.status === 'pending' && (
-                      <Button
-                        startIcon={<Print />}
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => handleStartPrinting(order.id)}
-                      >
-                        Start Printing
-                      </Button>
-                    )}
-                    {order.status === 'in_progress' && (
-                      <Button
-                        startIcon={<Update />}
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        onClick={() => handleUpdateStatus(order.id)}
-                      >
-                        Complete
-                      </Button>
-                    )}
-                    {order.status === 'completed' && (
-                      <Button
-                        startIcon={<LocalShipping />}
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => handleMoveToDelivery(order.id)}
-                      >
-                        Move to Delivery
-                      </Button>
-                    )}
+              {noOrdersFound ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    <Typography variant="body1" color="text.secondary">
+                      No Orders Found
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                orders.map((order) => (
+                  <TableRow key={order._id}>
+                    <TableCell>{order.orderId}</TableCell>
+                    <TableCell>{order.jobName}</TableCell>
+                    <TableCell>{order.bagDetails.type}</TableCell>
+                    <TableCell>{order.bagDetails.color}</TableCell>
+                    <TableCell>{order.bagDetails.printColor}</TableCell>
+                    <TableCell>{order.bagDetails.size}</TableCell>
+                    <TableCell>{order.quantity}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.opsertDetails[0].status.replace('_', ' ').toUpperCase()}
+                        color={getStatusColor(order.opsertDetails[0].status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {order.opsertDetails[0].status === 'pending' && (
+                        <Button
+                          startIcon={<Print />}
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={() => updateOrderStatus(order.orderId, 'in_progress', 'Printing started')}
+                        >
+                          Start Printing
+                        </Button>
+                      )}
+                      {order.opsertDetails[0].status === 'in_progress' && (
+                        <Button
+                          startIcon={<Update />}
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          onClick={() => updateOrderStatus(order.orderId, 'completed', 'Order completed')}
+                        >
+                          Complete Order
+                        </Button>
+                      )}
+                      {order.opsertDetails[0].status === 'completed' && (
+                        <Button
+                          startIcon={<LocalShipping />}
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={() => handleMoveToDelivery(order.orderId)}
+                        >
+                          Move to Delivery
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>

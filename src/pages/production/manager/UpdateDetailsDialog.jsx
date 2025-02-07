@@ -5,6 +5,7 @@ import productionService from '/src/services/productionManagerService.js';
 
 export default function UpdateDetailsDialog({ open, onClose, record, type, orderId }) {
   const [formData, setFormData] = useState({
+    type: type || '', // Initialize with type prop
     roll_size: '',
     cylinder_size: '',
     quantity_kgs: '',
@@ -17,6 +18,7 @@ export default function UpdateDetailsDialog({ open, onClose, record, type, order
 
     if (record && record.production_details) {
       setFormData({
+        type: type, // Ensure type is included
         roll_size: record.production_details.roll_size || '',
         cylinder_size: record.production_details.cylinder_size || '',
         quantity_kgs: record.production_details.quantity_kgs || '',
@@ -26,6 +28,7 @@ export default function UpdateDetailsDialog({ open, onClose, record, type, order
     } else {
       // Set empty values if production_details is null
       setFormData({
+        type: type, // Ensure type is included even if empty
         roll_size: '',
         cylinder_size: '',
         quantity_kgs: '',
@@ -33,7 +36,7 @@ export default function UpdateDetailsDialog({ open, onClose, record, type, order
         remarks: '',
       });
     }
-  }, [record]); // Only run when the record changes
+  }, [record, type]); // Include type as a dependency
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,8 +50,8 @@ export default function UpdateDetailsDialog({ open, onClose, record, type, order
     e.preventDefault();
 
     console.log('formData', formData);
-    console.log('order id', record);
-    console.log('new order id ', orderId);
+    console.log('order id', orderId);
+
     try {
       const updatedRecord = await productionService.updateProductionRecord(formData, orderId);
       toast.success('Record updated successfully');

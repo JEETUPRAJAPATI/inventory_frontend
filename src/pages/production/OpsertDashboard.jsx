@@ -1,35 +1,52 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Card,
   Button,
   Typography,
-  AppBar,
-  Toolbar,
-  IconButton,
-  useTheme,
   Grid,
-  Container,
   Divider
 } from '@mui/material';
-import {
-  Assessment,
-  ExitToApp,
-  Brightness4,
-  Brightness7,
-  Dashboard
-} from '@mui/icons-material';
+import { Dashboard, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../contexts/ColorModeContext';
 import { useAuth } from '../../hooks/useAuth';
 import OpsertOrderList from './components/OpsertOrderList';
+import OrderService from '../../services/dcutOpsertService';
 
 export default function OpsertDashboard() {
   const navigate = useNavigate();
-  const theme = useTheme();
   const { toggleColorMode } = useColorMode();
   const { logout } = useAuth();
+  const [orders, setOrders] = useState([]);
   const [activeStatus, setActiveStatus] = useState('pending');
+  const [noOrdersFound, setNoOrdersFound] = useState(false);
+
+  const fetchOrders = (status) => {
+    OrderService.listOrders(status)
+      .then((data) => {
+        if (data.success && data.data?.length) {
+          setOrders(data.data);
+          setNoOrdersFound(false);
+        } else {
+          setOrders([]);
+          setNoOrdersFound(true);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        setOrders([]);
+        setNoOrdersFound(true);
+      });
+  };
+
+  useEffect(() => {
+    fetchOrders(activeStatus);
+  }, [activeStatus]);
+
+  const handleStatusUpdated = () => {
+    fetchOrders(activeStatus);
+  };
 
   return (
     <Box sx={{ pb: 7 }}>
@@ -66,37 +83,26 @@ export default function OpsertDashboard() {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
-              <Grid item xs={4}>
-                <Button
-                  variant={activeStatus === 'pending' ? 'contained' : 'outlined'}
-                  onClick={() => setActiveStatus('pending')}
-                  fullWidth
-                >
-                  Pending
-                </Button>
-              </Grid>
-              <Grid item xs={4}>
-                <Button
-                  variant={activeStatus === 'in_progress' ? 'contained' : 'outlined'}
-                  onClick={() => setActiveStatus('in_progress')}
-                  fullWidth
-                >
-                  Active
-                </Button>
-              </Grid>
-              <Grid item xs={4}>
-                <Button
-                  variant={activeStatus === 'completed' ? 'contained' : 'outlined'}
-                  onClick={() => setActiveStatus('completed')}
-                  fullWidth
-                >
-                  Done
-                </Button>
-              </Grid>
+              {['pending', 'in_progress', 'completed'].map((status) => (
+                <Grid item xs={4} key={status}>
+                  <Button
+                    variant={activeStatus === status ? 'contained' : 'outlined'}
+                    onClick={() => setActiveStatus(status)}
+                    fullWidth
+                  >
+                    {status.replace('_', ' ').toUpperCase()}
+                  </Button>
+                </Grid>
+              ))}
             </Grid>
           </Box>
         </Card>
-        <OpsertOrderList status={activeStatus} />
+        <OpsertOrderList
+          orders={orders}
+          status={activeStatus}
+          noOrdersFound={noOrdersFound}
+          onStatusUpdated={handleStatusUpdated}
+        />
       </Box>
     </Box>
   );

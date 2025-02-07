@@ -16,7 +16,9 @@ import OrdersPage from './pages/sales/OrdersPage';
 // Production pages
 import FlexoDashboard from './pages/production/FlexoDashboard';
 import OpsertDashboard from './pages/production/OpsertDashboard';
-import BagMakingDashboard from './pages/production/BagMakingDashboard';
+import DcutBagMakingDashboard from './pages/production/DcutBagMakingDashboard';
+import WcutBagMakingDashboard from './pages/production/WcutBagMakingDashboard';
+
 import FlexoReportsPage from './pages/production/reports/FlexoReportsPage';
 import OpsertReportsPage from './pages/production/reports/OpsertReportsPage';
 import BagMakingReportsPage from './pages/production/reports/BagMakingReportsPage';
@@ -93,9 +95,9 @@ export default function App() {
                   <Route path="flexo/reports" element={<FlexoReportsPage />} />
                   <Route path="opsert/dashboard" element={<OpsertDashboard />} />
                   <Route path="opsert/reports" element={<OpsertReportsPage />} />
-                  <Route path="wcut/bagmaking/dashboard" element={<BagMakingDashboard type="wcut" />} />
+                  <Route path="wcut/bagmaking/dashboard" element={<WcutBagMakingDashboard type="wcut" />} />
                   <Route path="wcut/bagmaking/reports" element={<BagMakingReportsPage type="wcut" />} />
-                  <Route path="dcut/bagmaking/dashboard" element={<BagMakingDashboard type="dcut" />} />
+                  <Route path="dcut/bagmaking/dashboard" element={<DcutBagMakingDashboard type="dcut" />} />
                   <Route path="dcut/bagmaking/reports" element={<BagMakingReportsPage type="dcut" />} />
                 </Routes>
               </AdminLayout>

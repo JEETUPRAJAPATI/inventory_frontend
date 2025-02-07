@@ -85,7 +85,7 @@ export default function BagMakingOrderList({ bagType, orders, onFilterChange, fi
                     label={order.status}
                     color={
                       order.status === 'completed' ? 'success' :
-                      order.status === 'in_progress' ? 'warning' : 'default'
+                        order.status === 'in_progress' ? 'warning' : 'default'
                     }
                     size="small"
                   />
