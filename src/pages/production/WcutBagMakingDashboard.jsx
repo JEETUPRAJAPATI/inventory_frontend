@@ -4,9 +4,9 @@ import { Dashboard, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../contexts/ColorModeContext';
 import WcutBagMakingService from '../../services/wcutBagMakingService';
-import WCutBagMakingOrderList from "../production/components/WcutBagMakingOrderList";
+import WcutBagMakingOrderList from './components/WcutBagMakingOrderList';
 
-export default function BagMakingDashboard({ type }) {
+export default function WcutBagMakingDashboard({ type }) {
     const navigate = useNavigate();
     const { toggleColorMode } = useColorMode();
     const [activeStatus, setActiveStatus] = useState('pending');
@@ -91,7 +91,7 @@ export default function BagMakingDashboard({ type }) {
                     </Box>
                 </Card>
 
-                <WCutBagMakingOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound}
+                <WcutBagMakingOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound}
                     onStatusUpdated={handleStatusUpdated} />
             </Box>
         </Box>

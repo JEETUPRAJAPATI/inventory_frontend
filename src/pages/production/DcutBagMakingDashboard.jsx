@@ -6,7 +6,7 @@ import { useColorMode } from '../../contexts/ColorModeContext';
 import DCutBagMakingOrderList from './components/DCutBagMakingOrderList';
 import OrderService from '../../services/dcutBagMakingService';
 
-export default function BagMakingDashboard({ type }) {
+export default function DcutBagMakingDashboard({ type }) {
   const navigate = useNavigate();
   const { toggleColorMode } = useColorMode();
   const [activeStatus, setActiveStatus] = useState('pending');

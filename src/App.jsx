@@ -17,6 +17,7 @@ import OrdersPage from './pages/sales/OrdersPage';
 import FlexoDashboard from './pages/production/FlexoDashboard';
 import OpsertDashboard from './pages/production/OpsertDashboard';
 import DcutBagMakingDashboard from './pages/production/DcutBagMakingDashboard';
+
 import WcutBagMakingDashboard from './pages/production/WcutBagMakingDashboard';
 
 import FlexoReportsPage from './pages/production/reports/FlexoReportsPage';
