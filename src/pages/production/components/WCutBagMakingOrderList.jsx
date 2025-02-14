@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { Print, Update, LocalShipping } from '@mui/icons-material';
 import toast from 'react-hot-toast';
-import OrderService from '../../../services/wcutBagMakingServices';
+import OrderService from '../../../../src/services/wcutBagMakingServices';
 
 export default function WcutBagMakingOrderList({ orders, status, noOrdersFound, onStatusUpdated, type }) {
     const getStatusColor = (status) => ({
