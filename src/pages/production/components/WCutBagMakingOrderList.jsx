@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { Print, Update, LocalShipping } from '@mui/icons-material';
 import toast from 'react-hot-toast';
-import WcutBagMakingService from '../../../services/WcutBagMakingService';
+import OrderService from '../../../services/WcutBagMakingService';
 
 export default function WcutBagMakingOrderList({ orders, status, noOrdersFound, onStatusUpdated, type }) {
     const getStatusColor = (status) => ({
@@ -24,7 +24,7 @@ export default function WcutBagMakingOrderList({ orders, status, noOrdersFound, 
     }[status] || 'default');
 
     const updateOrderStatus = (orderId, newStatus, remarks) => {
-        WcutBagMakingService.updateOrderStatus(orderId, newStatus, remarks)
+        OrderService.updateOrderStatus(orderId, newStatus, remarks)
             .then(() => {
                 toast.success(`Order marked as ${newStatus.replace('_', ' ')}`);
                 onStatusUpdated();
@@ -34,7 +34,7 @@ export default function WcutBagMakingOrderList({ orders, status, noOrdersFound, 
             });
     };
     const handleMoveToDelivery = (orderId) => {
-        WcutBagMakingService.moveToDelivery(orderId)
+        OrderService.moveToDelivery(orderId)
             .then(() => {
                 toast.success('Order moved to delivery');
                 onStatusUpdated();

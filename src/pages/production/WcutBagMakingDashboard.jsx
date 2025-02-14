@@ -3,7 +3,7 @@ import { Box, Card, Button, Typography, Grid, Divider } from '@mui/material';
 import { Dashboard, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../contexts/ColorModeContext';
-import WcutBagMakingService from '../../services/WcutBagMakingService';
+import OrderService from '../../services/WcutBagMakingService';
 import WcutBagMakingOrderList from './components/WcutBagMakingOrderList';
 
 export default function WcutBagMakingDashboard({ type }) {
@@ -17,7 +17,7 @@ export default function WcutBagMakingDashboard({ type }) {
     const basePath = `/production/${type}/bagmaking`;
 
     const fetchOrders = (status) => {
-        WcutBagMakingService.listOrders(status)
+        OrderService.listOrders(status)
             .then((data) => {
                 if (data.success && data.data?.length) {
                     setOrders(data.data);
