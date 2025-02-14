@@ -2,7 +2,7 @@ import api from './api';
 
 const API_BASE_URL = '/wcut/bagmaking';
 
-const WcutBagMakingService = {
+const wcutBagMakingServices = {
     listOrders: async (status) => {
         try {
             const response = await api.get(`${API_BASE_URL}/orders?status=${status}`);
@@ -35,4 +35,4 @@ const WcutBagMakingService = {
     },
 };
 
-export default WcutBagMakingService;
+export default wcutBagMakingServices;
