@@ -10,7 +10,9 @@ export function useFlexoRecords() {
     try {
       setIsLoading(true);
       const data = await flexoService.getRecords();
-      setRecords(data);
+      console.log('flexo listing', data);
+      setRecords(data.data || []);
+
       setError(null);
     } catch (err) {
       setError(err.message);

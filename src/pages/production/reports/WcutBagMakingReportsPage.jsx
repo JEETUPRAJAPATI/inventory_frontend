@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
+  Grid,
   AppBar,
   Toolbar,
   Typography,
   IconButton,
-  Grid,
+  Container,
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -14,49 +14,52 @@ import ReportSummary from './components/ReportSummary';
 import ReportTable from './components/ReportTable';
 import ReportCharts from './components/ReportCharts';
 import ReportFilters from './components/ReportFilters';
-import { bagMakingOrders } from '../../../data/bagMakingData';
+import OrderService from '../../../services/WcutBagMakingService';
 
-export default function BagMakingReportsPage({ type }) {
+export default function WcutBagMakingReportsPage({ type }) {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    dateRange: 'monthly',
-    startDate: '',
-    endDate: '',
-    status: 'all',
-  });
+  const [records, setRecords] = useState([]);
+  const [filters, setFilters] = useState({});
+
+  useEffect(() => {
+    const fetchReportList = async () => {
+      try {
+        const response = await OrderService.getRecords(); // Call API
+        setRecords(response.data); // Update state with API response
+      } catch (error) {
+        console.error('Error fetching report data:', error);
+      }
+    };
+
+    fetchReportList(); // Fetch data when component mounts
+  }, [type]); // Re-fetch when type changes
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
+
   const bagType = type === 'wcut' ? 'W-Cut' : 'D-Cut';
   const basePath = `/production/${type}/bagmaking/dashboard`;
-  console.log('basePath', basePath);
+
   const handleBack = () => {
-    const navigatePath = type ? basePath : '/production/bagmaking/dashboard';
-    navigate(navigatePath);
+    navigate(type ? basePath : '/production/bagmaking/dashboard');
   };
 
   return (
+
     <Box sx={{ pb: 7 }}>
       <Box sx={{ mt: 2, px: 3 }}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <ReportFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-            />
+            <ReportSummary records={records} />
           </Grid>
 
           <Grid item xs={12}>
-            <ReportSummary records={bagMakingOrders} />
+            <ReportCharts records={records} />
           </Grid>
 
           <Grid item xs={12}>
-            <ReportCharts records={bagMakingOrders} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <ReportTable records={bagMakingOrders} />
+            <ReportTable records={records} />
           </Grid>
         </Grid>
       </Box>

@@ -38,9 +38,10 @@ const OrderService = {
 
 
     // 4. Direct billing API
-    directBilling: async (orderId) => {
+    directBilling: async (orderId, bagType) => {
+        console.log('data', bagType)
         try {
-            const response = await api.put(`${API_BASE_URL}/${orderId}/billing`, { billingStatus: 'completed' });
+            const response = await api.put(`${API_BASE_URL}/${orderId}/billing`, { type: bagType, billingStatus: 'completed' });
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
@@ -48,14 +49,19 @@ const OrderService = {
     },
 
     // 5. Move to delivery API
-    handleMoveToOpsert: async (orderId) => {
+    handleMoveToOpsert: async (orderId, bagType) => {
         try {
-            const response = await api.put(`${API_BASE_URL}/${orderId}/Opsert`);
+            const response = await api.put(`${API_BASE_URL}/${orderId}/Opsert`, { type: bagType });
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
-    }
+    },
+
+    getRecords: async () => {
+        const response = await api.get(`${API_BASE_URL}/production/records`);
+        return response.data;
+    },
 };
 
 export default OrderService;

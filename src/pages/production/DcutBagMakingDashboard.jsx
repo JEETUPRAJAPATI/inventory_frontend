@@ -13,7 +13,7 @@ export default function DcutBagMakingDashboard({ type }) {
   const [orders, setOrders] = useState([]);
   const [noOrdersFound, setNoOrdersFound] = useState(false);
 
-  const bagType = type === 'wcut' ? 'W-Cut' : 'D-Cut';
+  const bagType = type === 'wcut' ? 'w_cut_bagmaking' : 'd_cut_bagmaking';
   const basePath = `/production/${type}/bagmaking`;
 
   const fetchOrders = (status) => {
@@ -88,7 +88,7 @@ export default function DcutBagMakingDashboard({ type }) {
           </Box>
         </Card>
 
-        <DCutBagMakingOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound} />
+        <DCutBagMakingOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound} bagType={bagType} />
       </Box>
     </Box>
   );

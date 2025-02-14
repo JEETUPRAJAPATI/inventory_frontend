@@ -1,0 +1,33 @@
+.modal {
+  $p: &;
+  display: flex;
+  flex-direction: column;
+
+  #{$p}__header {
+    display: flex;
+    padding: 5px;
+    font-size: 1.2rem;
+
+    #{$p}__title {
+      flex-grow: 1;
+      border-bottom: 1px solid #eee;
+      font-weight: 800;
+    }
+
+    #{$p}__close {
+      padding-right: 5px;
+
+      button {
+        font-size: 1.1rem;
+        border: 0;
+        background: transparent;
+      }
+    }
+  }
+
+  #{$p}__content {
+    padding: 5px;
+    flex-grow: 1;
+    min-height: 200px;
+  }
+}

@@ -24,6 +24,7 @@ const initialFormData = {
   fabricQuality: '',
   quantity: '',
   agent: '',
+  orderPrice: '',
   status: 'pending',
 };
 
@@ -316,6 +317,15 @@ export default function OrderForm({ open, onClose, onSubmit, order = null }) {
                 label="Agent"
                 name="agent"
                 value={formData.agent}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormInput
+                label="Order Price"
+                name="orderPrice"
+                value={formData.orderPrice}
                 onChange={handleChange}
                 required
               />

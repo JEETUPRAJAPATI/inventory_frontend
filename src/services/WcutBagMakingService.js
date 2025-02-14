@@ -31,6 +31,10 @@ const WcutBagMakingService = {
             throw new Error('Failed to move order to delivery');
         }
     },
+    getRecords: async () => {
+        const response = await api.get(`${API_BASE_URL}/production/records`);
+        return response.data;
+    },
 };
 
 export default WcutBagMakingService;

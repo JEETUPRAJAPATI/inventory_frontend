@@ -92,7 +92,7 @@ export default function WcutBagMakingDashboard({ type }) {
                 </Card>
 
                 <WcutBagMakingOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound}
-                    onStatusUpdated={handleStatusUpdated} />
+                    onStatusUpdated={handleStatusUpdated} bagType={bagType} />
             </Box>
         </Box>
     );

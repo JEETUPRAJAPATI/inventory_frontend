@@ -1,37 +1,17 @@
 import { useState } from 'react';
 import {
   Grid,
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
   Box,
-  Container
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import ReportFilters from './components/ReportFilters';
 import ReportSummary from './components/ReportSummary';
 import ReportTable from './components/ReportTable';
 import ReportCharts from './components/ReportCharts';
 import { useFlexoRecords } from '../../../hooks/useFlexoRecords';
-import { filterRecords } from '../../../utils/reportUtils';
 
 export default function FlexoReportsPage() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    dateRange: 'monthly',
-    startDate: '',
-    endDate: '',
-    status: 'all',
-  });
-
   const { records, isLoading } = useFlexoRecords();
-  const filteredRecords = filterRecords(records, filters);
-
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
 
   const handleBack = () => {
     navigate('/production/flexo/dashboard');
@@ -41,25 +21,19 @@ export default function FlexoReportsPage() {
 
   return (
     <Box sx={{ pb: 7 }}>
-      {/* Mobile App Bar with Back Button */}
-
-
       <Box>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <ReportFilters filters={filters} onFilterChange={handleFilterChange} />
+            <ReportSummary records={Array.isArray(records) ? records : []} />
+
           </Grid>
 
           <Grid item xs={12}>
-            <ReportSummary records={filteredRecords} />
+            <ReportCharts records={Array.isArray(records) ? records : []} />
           </Grid>
 
           <Grid item xs={12}>
-            <ReportCharts records={filteredRecords} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <ReportTable records={filteredRecords} />
+            <ReportTable records={records} />
           </Grid>
         </Grid>
       </Box>

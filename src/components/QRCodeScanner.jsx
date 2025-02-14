@@ -24,13 +24,12 @@ export default function QRCodeScanner({ onScanSuccess }) {
   useEffect(() => {
     if (scanning) {
       const config = {
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        fps: 5,
+        fps: 10,
+        qrbox: { width: 300, height: 300 },
         rememberLastUsedCamera: true,
+        disableFlip: false
       };
+
 
       scannerRef.current = new Html5QrcodeScanner('qr-reader', config);
 
@@ -95,23 +94,15 @@ export default function QRCodeScanner({ onScanSuccess }) {
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Top Bar */}
-      <Box 
-        sx={{ 
-          p: 2, 
-          display: 'flex', 
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           borderBottom: '1px solid rgba(0,0,0,0.12)'
         }}
       >
-        <IconButton 
-          color="primary" 
-          onClick={downloadTestQR}
-          title="Download Test QR"
-        >
-          <CloudDownload />
-        </IconButton>
-
         <Typography variant="h6">
           Scan QR Code
         </Typography>
@@ -124,20 +115,13 @@ export default function QRCodeScanner({ onScanSuccess }) {
           type="file"
           onChange={handleFileUpload}
         />
-        <IconButton 
-          color="primary"
-          onClick={() => fileInputRef.current.click()}
-          title="Upload QR Image"
-        >
-          <Upload />
-        </IconButton>
       </Box>
 
       {/* Scanner Area */}
       <Box sx={{ flex: 1, position: 'relative' }}>
-        <Box 
-          id="qr-reader" 
-          sx={{ 
+        <Box
+          id="qr-reader"
+          sx={{
             width: '100%',
             height: '100%',
             '& video': {
@@ -151,8 +135,8 @@ export default function QRCodeScanner({ onScanSuccess }) {
 
         {/* Test QR Overlay */}
         {showTestQR && (
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               position: 'absolute',
               top: 0,
               left: 0,
@@ -176,8 +160,8 @@ export default function QRCodeScanner({ onScanSuccess }) {
             <Typography variant="caption" sx={{ color: 'white', mt: 2 }}>
               Save this QR code to test file upload
             </Typography>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={() => setShowTestQR(false)}
               sx={{ mt: 2 }}
             >

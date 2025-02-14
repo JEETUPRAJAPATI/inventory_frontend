@@ -26,7 +26,7 @@ export default function FlexoOrderList({ status = 'pending', bagType }) {
   const [noOrdersFound, setNoOrdersFound] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showScanner, setShowScanner] = useState(false); // Ensure this state controls the scanner visibility
-
+  const [isOpen, setOpen] = useState(false);
   useEffect(() => {
     fetchOrders();
   }, [status]);
@@ -66,16 +66,18 @@ export default function FlexoOrderList({ status = 'pending', bagType }) {
   };
 
   const handleScanSuccess = async (scannedData) => {
+
+    console.log('scannedData', scannedData);
     try {
-      // Assuming scannedData is the orderId from the QR code
-      if (scannedData === selectedOrderId) {
-        await OrderService.verifyOrder(scannedData);
-        toast.success('Order verified successfully');
-        fetchOrders(); // Fetch orders to reflect any changes
-        setShowScanner(false); // Close the scanner dialog
-      } else {
-        toast.error('QR code does not match selected order');
+      if (!selectedOrderId) {
+        toast.error('No order selected for verification');
+        return;
       }
+      await OrderService.verifyOrder(selectedOrderId, scannedData);
+      toast.success('Order verified successfully');
+      fetchOrders(); // Refresh orders
+      setShowScanner(false); // Close scanner dialog
+      setSelectedOrderId(null); // Reset selected order ID
     } catch (error) {
       toast.error('Failed to verify order');
     }
@@ -107,7 +109,7 @@ export default function FlexoOrderList({ status = 'pending', bagType }) {
   };
 
   const handleBillingClick = (order) => {
-    OrderService.directBilling(order._id)
+    OrderService.directBilling(order.orderId, 'W-cut')
       .then(() => {
         toast.success('Order moved to billing successfully');
         fetchOrders();
@@ -162,7 +164,7 @@ export default function FlexoOrderList({ status = 'pending', bagType }) {
             size="small"
             onClick={() => handleMoveToBagMaking(order.orderId)}
           >
-            Move to Delivery
+            Move to Bag Making
           </Button>
         );
       }
@@ -211,7 +213,7 @@ export default function FlexoOrderList({ status = 'pending', bagType }) {
               size="small"
               onClick={() => handleMoveToBagMaking(order.orderId)}
             >
-              Move to Delivery
+              Move to Bag Making
             </Button>
           </Box>
         );

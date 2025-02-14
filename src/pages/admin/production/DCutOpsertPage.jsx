@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
+  Grid,
   Card,
   Table,
   TableBody,
@@ -12,14 +12,15 @@ import {
   Typography,
   Chip,
   TextField,
-  Grid,
+  IconButton,
+  Box,
   MenuItem,
 } from '@mui/material';
-import { Print, Update, LocalShipping } from '@mui/icons-material';
+
+
+import { Print, Update, LocalShipping, Search, Delete } from '@mui/icons-material';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
-
-import { Delete, Search } from '@mui/icons-material';
 export default function DCutOpsertPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -100,11 +101,22 @@ export default function DCutOpsertPage() {
           select
           size="small"
           name="status"
-          value={filters.type}
+          value={filters.status}
           onChange={handleFilterChange}
           sx={{ minWidth: 120 }}
+          SelectProps={{
+            displayEmpty: true,
+            renderValue: (selected) => {
+              if (selected === '') {
+                return <em>All Statuses</em>;
+              }
+              return selected;
+            },
+          }}
         >
-          <MenuItem value="all">All Types</MenuItem>
+          <MenuItem value="">
+            <em>All Statuses</em>
+          </MenuItem>
           <MenuItem value="pending">Pending</MenuItem>
           <MenuItem value="in_progress">In Progress</MenuItem>
           <MenuItem value="completed">Completed</MenuItem>
@@ -132,62 +144,56 @@ export default function DCutOpsertPage() {
                 <TableRow>
                   <TableCell>Order ID</TableCell>
                   <TableCell>Job Name</TableCell>
-                  <TableCell>Print Type</TableCell>
                   <TableCell>Quantity</TableCell>
+                  <TableCell>Customer Name</TableCell>
+                  <TableCell>Bag Type</TableCell>
+                  <TableCell>Handle Color</TableCell>
+                  <TableCell>Size</TableCell>
+                  <TableCell>Color</TableCell>
+                  <TableCell>Print Color</TableCell>
+                  <TableCell>GSM</TableCell>
                   <TableCell>Status</TableCell>
+                  {/* <TableCell>Actions</TableCell> */}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order._id || order.id}>
-                    <TableCell>{order.orderId}</TableCell>
-                    <TableCell>{order.jobName}</TableCell>
-                    <TableCell>{order.printType}</TableCell>
-                    <TableCell>{order.quantity}</TableCell>
+                    <TableCell>{order.order_id}</TableCell>
+                    <TableCell>{order.orderDetails.jobName}</TableCell>
+                    <TableCell>{order.orderDetails.quantity}</TableCell>
+                    <TableCell>{order.orderDetails.customerName}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.type}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.handleColor}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.size}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.color}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.printColor}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.gsm}</TableCell>
                     <TableCell>
                       <Chip
                         label={order.status.toUpperCase()}
                         color={
-                          order.status === 'completed' ? 'success' :
-                            order.status === 'in_progress' ? 'warning' : 'default'
+                          order.status === 'completed'
+                            ? 'success'
+                            : order.status === 'in_progress'
+                              ? 'warning'
+                              : 'default'
                         }
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>
-                      {order.status === 'pending' && (
-                        <Button
-                          startIcon={<Print />}
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleStatusUpdate(order._id || order.id, 'in_progress')}
-                        >
-                          Start Process
-                        </Button>
-                      )}
-                      {order.status === 'in_progress' && (
-                        <Button
-                          startIcon={<Update />}
-                          variant="contained"
-                          color="success"
-                          size="small"
-                          onClick={() => handleStatusUpdate(order._id || order.id, 'completed')}
-                        >
-                          Complete
-                        </Button>
-                      )}
-                      {order.status === 'completed' && (
-                        <Button
-                          startIcon={<LocalShipping />}
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => handleMoveToDelivery(order._id || order.id)}
-                        >
-                          Move to Delivery
-                        </Button>
-                      )}
-                    </TableCell>
+                    {/* <TableCell>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          setOrderToDelete(order);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>

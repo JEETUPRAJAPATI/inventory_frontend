@@ -36,11 +36,10 @@ const OrderService = {
         }
     },
 
-
     // 4. Direct billing API
-    directBilling: async (orderId) => {
+    directBilling: async (orderId, bagType) => {
         try {
-            const response = await api.put(`${API_BASE_URL}/${orderId}/billing`, { billingStatus: 'completed' });
+            const response = await api.put(`${API_BASE_URL}/${orderId}/billing`, { billingStatus: 'completed', type: bagType });
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;

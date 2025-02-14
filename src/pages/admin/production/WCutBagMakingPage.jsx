@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
+  Grid,
   Card,
   Table,
   TableBody,
@@ -12,9 +12,12 @@ import {
   Typography,
   Chip,
   TextField,
-  Grid,
+  IconButton,
+  Box,
+  MenuItem,
 } from '@mui/material';
-import { Print, Update, LocalShipping } from '@mui/icons-material';
+
+import { Print, Update, LocalShipping, Search, Delete } from '@mui/icons-material';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
 
@@ -40,7 +43,12 @@ export default function WCutBagMakingPage() {
       setLoading(false);
     }
   };
-
+  const handleReset = () => {
+    setFilters({
+      search: '',
+      type: '',
+    });
+  };
   useEffect(() => {
     fetchOrders();
   }, [filters]);
@@ -75,36 +83,42 @@ export default function WCutBagMakingPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>W-Cut Bag Making Production</Typography>
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            label="Search Operator"
-            name="search"
-            value={filters.search}
-            onChange={handleFilterChange}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            select
-            label="Status"
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            SelectProps={{ native: true }}
-          >
-            <option value="">All</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </TextField>
-        </Grid>
-      </Grid>
+    <Box sx={{ p: 3 }}>
+
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search..."
+          name="search"
+          value={filters.search}
+          onChange={handleFilterChange}
+          InputProps={{
+            startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />,
+          }}
+        />
+        <TextField
+          fullWidth
+          select
+          label="Status"
+          name="status"
+          size="small"
+          sx={{ minWidth: 120 }}
+          value={filters.status}
+          onChange={handleFilterChange}
+          SelectProps={{ native: true }}
+        >
+          <option value="">All</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </TextField>
+
+        <Button variant="outlined" onClick={handleReset}>
+          Reset
+        </Button>
+      </Box>
+
 
       <Card>
         <TableContainer>
@@ -122,62 +136,56 @@ export default function WCutBagMakingPage() {
                 <TableRow>
                   <TableCell>Order ID</TableCell>
                   <TableCell>Job Name</TableCell>
-                  <TableCell>Operator</TableCell>
                   <TableCell>Quantity</TableCell>
+                  <TableCell>Customer Name</TableCell>
+                  <TableCell>Bag Type</TableCell>
+                  <TableCell>Handle Color</TableCell>
+                  <TableCell>Size</TableCell>
+                  <TableCell>Color</TableCell>
+                  <TableCell>Print Color</TableCell>
+                  <TableCell>GSM</TableCell>
                   <TableCell>Status</TableCell>
+                  {/* <TableCell>Actions</TableCell> */}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order._id || order.id}>
-                    <TableCell>{order.orderId}</TableCell>
-                    <TableCell>{order.jobName}</TableCell>
-                    <TableCell>{order.operator}</TableCell>
-                    <TableCell>{order.quantity}</TableCell>
+                    <TableCell>{order.order_id}</TableCell>
+                    <TableCell>{order.orderDetails.jobName}</TableCell>
+                    <TableCell>{order.orderDetails.quantity}</TableCell>
+                    <TableCell>{order.orderDetails.customerName}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.type}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.handleColor}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.size}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.color}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.printColor}</TableCell>
+                    <TableCell>{order.orderDetails.bagDetails.gsm}</TableCell>
                     <TableCell>
                       <Chip
                         label={order.status.toUpperCase()}
                         color={
-                          order.status === 'completed' ? 'success' :
-                            order.status === 'in_progress' ? 'warning' : 'default'
+                          order.status === 'completed'
+                            ? 'success'
+                            : order.status === 'in_progress'
+                              ? 'warning'
+                              : 'default'
                         }
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>
-                      {order.status === 'pending' && (
-                        <Button
-                          startIcon={<Print />}
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleStatusUpdate(order._id || order.id, 'in_progress')}
-                        >
-                          Start Process
-                        </Button>
-                      )}
-                      {order.status === 'in_progress' && (
-                        <Button
-                          startIcon={<Update />}
-                          variant="contained"
-                          color="success"
-                          size="small"
-                          onClick={() => handleStatusUpdate(order._id || order.id, 'completed')}
-                        >
-                          Complete
-                        </Button>
-                      )}
-                      {order.status === 'completed' && (
-                        <Button
-                          startIcon={<LocalShipping />}
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => handleMoveToDelivery(order._id || order.id)}
-                        >
-                          Move to Delivery
-                        </Button>
-                      )}
-                    </TableCell>
+                    {/* <TableCell>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          setOrderToDelete(order);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>
@@ -185,6 +193,6 @@ export default function WCutBagMakingPage() {
           )}
         </TableContainer>
       </Card>
-    </Box>
+    </Box >
   );
 }

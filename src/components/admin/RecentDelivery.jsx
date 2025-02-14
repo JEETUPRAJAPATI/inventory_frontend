@@ -22,8 +22,6 @@ export default function DeliveryList() {
     const [deliveries, setDeliveries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedDelivery, setSelectedDelivery] = useState(null);
-
-
     const fetchDeliveries = async () => {
         try {
             setLoading(true);

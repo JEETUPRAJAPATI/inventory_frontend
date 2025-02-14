@@ -11,20 +11,21 @@ import {
   Box,
   Stack,
 } from '@mui/material';
-
 export default function DeliveryDetailsModal({ open, delivery, onClose }) {
-  if (!delivery) {
+  if (!delivery || !delivery.data || !delivery.data.data) {
     return null;
   }
 
-  console.log('Delivery data:', delivery);
+  const deliveryData = delivery.data.data; // Extract correct data object
+
+  console.log('Delivery data:', deliveryData);
 
   const getStatusColor = (status) => {
     const colors = {
       Pending: 'warning',
       'In Transit': 'info',
       Delivered: 'success',
-      Cancelled: 'error', // Added 'Cancelled' status for consistency
+      Cancelled: 'error',
     };
     return colors[status] || 'default';
   };
@@ -45,7 +46,7 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
                 Customer Name
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {delivery.data.customer || 'N/A'}
+                {deliveryData.customer || 'N/A'}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -53,7 +54,7 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
                 Contact
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {delivery.data.contact || 'N/A'}
+                {deliveryData.contact || 'N/A'}
               </Typography>
             </Grid>
           </Grid>
@@ -74,7 +75,7 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
                 Driver Name
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {delivery.data.driverName || 'N/A'}
+                {deliveryData.driverName || 'N/A'}
               </Typography>
             </Grid>
 
@@ -83,7 +84,7 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
                 Driver Mobile
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {delivery.data.driverContact || 'N/A'}
+                {deliveryData.driverContact || 'N/A'}
               </Typography>
             </Grid>
 
@@ -92,7 +93,7 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
                 Vehicle Number
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {delivery.data.vehicleNo || 'N/A'}
+                {deliveryData.vehicleNo || 'N/A'}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -100,8 +101,8 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
                 Delivery Date
               </Typography>
               <Typography variant="body1" fontWeight="bold">
-                {delivery.data.deliveryDate
-                  ? new Date(delivery.data.deliveryDate).toLocaleDateString()
+                {deliveryData.deliveryDate
+                  ? new Date(deliveryData.deliveryDate).toLocaleDateString()
                   : 'N/A'}
               </Typography>
             </Grid>
@@ -110,58 +111,48 @@ export default function DeliveryDetailsModal({ open, delivery, onClose }) {
                 Status
               </Typography>
               <Chip
-                label={delivery.data.status || 'Unknown'}
-                color={getStatusColor(delivery.data.status)}
+                label={deliveryData.status || 'Unknown'}
+                color={getStatusColor(deliveryData.status)}
                 size="medium"
               />
             </Grid>
           </Grid>
 
           {/* Additional Information */}
-          {delivery.data.notes || delivery.data.orderId || delivery.data.createdAt ? (
+          {deliveryData.orderId || deliveryData.createdAt ? (
             <Box sx={{ mt: 4 }}>
               <Typography variant="subtitle1" color="text.secondary" gutterBottom>
                 Additional Information
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2}>
-                {delivery.data.orderId && (
+                {deliveryData.orderId && (
                   <Grid item xs={12} sm={6}>
                     <Typography variant="body2" color="text.secondary">
                       Order ID
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {delivery.data.orderId}
+                      {deliveryData.orderId}
                     </Typography>
                   </Grid>
                 )}
-                {delivery.data.notes && (
-                  <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                      Notes
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {delivery.data.notes}
-                    </Typography>
-                  </Grid>
-                )}
-                {delivery.data.createdAt && (
+                {deliveryData.createdAt && (
                   <Grid item xs={12} sm={6}>
                     <Typography variant="body2" color="text.secondary">
                       Created At
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {new Date(delivery.data.createdAt).toLocaleString()}
+                      {new Date(deliveryData.createdAt).toLocaleString()}
                     </Typography>
                   </Grid>
                 )}
-                {delivery.data.updatedAt && (
+                {deliveryData.updatedAt && (
                   <Grid item xs={12} sm={6}>
                     <Typography variant="body2" color="text.secondary">
                       Last Updated
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {new Date(delivery.data.updatedAt).toLocaleString()}
+                      {new Date(deliveryData.updatedAt).toLocaleString()}
                     </Typography>
                   </Grid>
                 )}

@@ -154,11 +154,15 @@ const InvoiceManagement = () => {
                   <TableCell>{invoice.customer}</TableCell>
                   <TableCell>₹{invoice.amount}</TableCell>
                   <TableCell>
-                    {new Intl.DateTimeFormat('en-GB', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    }).format(new Date(invoice.date))}
+                    {invoice.date ? (
+                      new Intl.DateTimeFormat('en-GB', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      }).format(new Date(invoice.date))
+                    ) : (
+                      'Date not available'
+                    )}
                   </TableCell>
                   <TableCell>
                     <Chip

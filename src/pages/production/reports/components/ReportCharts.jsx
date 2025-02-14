@@ -24,15 +24,15 @@ export default function ReportCharts({ records }) {
     return acc;
   }, {});
 
-  const data = Object.values(chartData).sort((a, b) => 
+  const data = Object.values(chartData).sort((a, b) =>
     new Date(a.date) - new Date(b.date)
   );
 
   return (
     <Card>
-      <CardHeader 
-        title="Production Trends" 
-        sx={{ 
+      <CardHeader
+        title="Production Trends"
+        sx={{
           '& .MuiCardHeader-title': {
             fontSize: '1.25rem',
             fontWeight: 600

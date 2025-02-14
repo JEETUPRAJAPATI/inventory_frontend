@@ -1,3 +1,4 @@
+import React, { useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,46 +8,32 @@ import {
   Box,
   Typography,
 } from "@mui/material";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 
 export default function QRCodeDialog({ open, onClose, orderData }) {
-  console.log("order data in qr code dialog : ", orderData);
+  const qrRef = useRef(null);
+
   if (!orderData) return null;
 
-  const qrData = {
+  const qrData = JSON.stringify({
     fabricColor: orderData.fabricColor,
     rollSize: orderData.rollSize,
     gsm: orderData.gsm,
     quantity: orderData.quantity,
-  };
+  });
 
   const downloadQRCode = () => {
-    const svgElement = document.querySelector(".qr-code-svg"); // Ensure the correct SVG is targeted
-    if (!svgElement) {
-      console.error("QR Code SVG element not found.");
+    const canvas = qrRef.current?.querySelector("canvas");
+    if (!canvas) {
+      console.error("QR Code canvas element not found.");
       return;
     }
 
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-
-      const pngFile = canvas.toDataURL("image/png");
-      const downloadLink = document.createElement("a");
-      downloadLink.download = `order-${orderData._id}-qr.png`;
-      downloadLink.href = pngFile;
-      downloadLink.click();
-    };
-
-    img.src =
-      "data:image/svg+xml;base64," +
-      btoa(unescape(encodeURIComponent(svgData))); // Properly encode SVG
+    const pngFile = canvas.toDataURL("image/png");
+    const downloadLink = document.createElement("a");
+    downloadLink.download = `order-${orderData._id}-qr.png`;
+    downloadLink.href = pngFile;
+    downloadLink.click();
   };
 
   return (
@@ -60,14 +47,9 @@ export default function QRCodeDialog({ open, onClose, orderData }) {
             alignItems: "center",
             py: 3,
           }}
+          ref={qrRef}
         >
-          <QRCodeSVG
-            value={JSON.stringify(qrData)}
-            size={256}
-            level="H"
-            includeMargin
-            className="qr-code-svg" // Add a unique class to target the SVG element
-          />
+          <QRCodeCanvas value={qrData} size={300} level="H" includeMargin />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             Scan this QR code to get order details
           </Typography>

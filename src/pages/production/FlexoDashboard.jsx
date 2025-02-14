@@ -94,7 +94,7 @@ export default function FlexoDashboard() {
             </Grid>
           </Box>
         </Card>
-        <FlexoOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound} />
+        <FlexoOrderList orders={orders} status={activeStatus} noOrdersFound={noOrdersFound} type='W-Cut' />
       </Box>
     </Box>
   );

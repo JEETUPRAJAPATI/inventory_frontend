@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -8,69 +8,51 @@ import {
   IconButton,
   Grid,
 } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import ReportSummary from './components/ReportSummary';
 import ReportTable from './components/ReportTable';
 import ReportCharts from './components/ReportCharts';
 import ReportFilters from './components/ReportFilters';
-
-// Mock data for Opsert reports
-const mockOpsertRecords = [
-  {
-    id: 'OPS-001',
-    order_id: 'PO-001',
-    job_name: 'Premium D-Cut Bags',
-    bag_type: 'D-Cut',
-    quantity: 1000,
-    status: 'completed',
-    completion_date: '2024-02-20'
-  },
-  {
-    id: 'OPS-002',
-    order_id: 'PO-002',
-    job_name: 'Eco Friendly D-Cut',
-    bag_type: 'D-Cut',
-    quantity: 2000,
-    status: 'completed',
-    completion_date: '2024-02-19'
-  }
-];
+import OrderService from '../../../services/dcutOpsertService';
 
 export default function OpsertReportsPage() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    dateRange: 'monthly',
-    startDate: '',
-    endDate: '',
-    status: 'all',
-  });
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
+  const [records, setRecords] = useState([]);
+
+  useEffect(() => {
+    const fetchReportList = async () => {
+      try {
+        const response = await OrderService.getRecords(); // Call API
+        setRecords(response.data); // Update state with API response
+      } catch (error) {
+        console.error('Error fetching report data:', error);
+      }
+    };
+
+    fetchReportList(); // Fetch data when component mounts
+  }, []); // Removed [type] since it wasn't defined
+
   const handleBack = () => {
     navigate('/production/opsert/dashboard');
   };
+
   return (
     <Box sx={{ pb: 7 }}>
       <Box sx={{ mt: 2 }}>
         <Grid container spacing={3}>
+
           <Grid item xs={12}>
-            <ReportFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <ReportSummary records={mockOpsertRecords} />
+            <ReportSummary records={records} />
           </Grid>
 
           <Grid item xs={12}>
-            <ReportCharts records={mockOpsertRecords} />
+            <ReportCharts records={records} />
           </Grid>
 
           <Grid item xs={12}>
-            <ReportTable records={mockOpsertRecords} />
+            <ReportTable records={records} />
           </Grid>
         </Grid>
       </Box>

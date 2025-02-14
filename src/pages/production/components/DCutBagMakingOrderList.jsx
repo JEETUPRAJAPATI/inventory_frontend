@@ -100,7 +100,7 @@ export default function BagMakingOrderList({ status = 'pending', bagType }) {
 
   const handleMoveToOpsert = (orderId) => {
     // API call to move order to delivery
-    OrderService.handleMoveToOpsert(orderId)
+    OrderService.handleMoveToOpsert(orderId, bagType)
       .then(() => {
         toast.success('Order moved to Opsert');
         fetchOrders();
@@ -112,7 +112,8 @@ export default function BagMakingOrderList({ status = 'pending', bagType }) {
 
   const handleBillingClick = (order) => {
     // API call to directly bill the order
-    OrderService.directBilling(order._id)
+    console.log('vv', bagType)
+    OrderService.directBilling(order.orderId, bagType)
       .then(() => {
         toast.success('Order moved to billing successfully');
         fetchOrders();
