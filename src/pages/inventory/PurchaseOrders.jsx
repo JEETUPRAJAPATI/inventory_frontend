@@ -30,7 +30,7 @@ export default function PurchaseOrders() {
     const fetchOrders = async () => {
       try {
         const response = await purchaseOrderService.getOrders();
-        console.log('response',response.data)
+        console.log('response', response.data)
         setOrders(response.data);
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -59,22 +59,23 @@ export default function PurchaseOrders() {
   };
 
   const handleFormSubmit = async (formData) => {
-    try {
-      if (selectedOrder) {
-        console.log('form data',formData);
-        console.log('od',selectedOrder.id);
-        await purchaseOrderService.updateOrder(selectedOrder._id, formData);
-        toast.success('Purchase order updated successfully');
-      } else {
-        await purchaseOrderService.createOrder(formData);
-        toast.success('Purchase order created successfully');
-      }
-      setFormOpen(false);
-      refreshOrders();
-    } catch (error) {
-      toast.error('Failed to save purchase order');
+    console.log('form data', formData);
+
+    if (selectedOrder) {
+      console.log('od', selectedOrder.id);
+      await purchaseOrderService.updateOrder(selectedOrder._id, formData);
+      toast.success('Purchase order updated successfully');
+    } else {
+      console.log('addintion formdata')
+      await purchaseOrderService.addProduct(formData);
+      toast.success('Purchase order created successfully');
     }
+    setFormOpen(false);
+    refreshOrders();
+
   };
+
+
 
   const handleDeleteConfirm = async () => {
     try {
@@ -116,6 +117,9 @@ export default function PurchaseOrders() {
       <Card>
         <div className="flex justify-between items-center p-4">
           <Typography variant="h6">Purchase Orders</Typography>
+          <Button variant="contained" color="primary" startIcon={<Add />} onClick={handleAddOrder}>
+            Add Purchase Order
+          </Button>
         </div>
         <TableContainer>
           <Table>
@@ -134,7 +138,7 @@ export default function PurchaseOrders() {
             <TableBody>
               {orders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell>{order.orderNumber}</TableCell>
+                  <TableCell>{order.order_number}</TableCell>
                   <TableCell>{order.supplier}</TableCell>
                   <TableCell>{order.materialType}</TableCell>
                   <TableCell>{order.quantity}</TableCell>

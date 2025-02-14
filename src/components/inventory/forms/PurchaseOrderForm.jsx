@@ -29,7 +29,7 @@ export default function PurchaseOrderForm({ open, onClose, onSubmit, order = nul
       setFormData({
         orderNumber: order.order_number || '',
         supplier: order.supplier || '',
-        materialType: order.material_type || '',
+        materialType: order.materialType || '',
         quantity: order.quantity || '',
         unitPrice: order.unitPrice || '',
         deliveryDate: order.deliveryDate || '',
@@ -71,7 +71,7 @@ export default function PurchaseOrderForm({ open, onClose, onSubmit, order = nul
       status: formData.status,
       notes: formData.notes,
     };
-
+    console.log('form data is', formDataToSend)
     onSubmit(formDataToSend);
   };
 

@@ -6,8 +6,6 @@ const WcutBagMakingService = {
     listOrders: async (status) => {
         try {
             const response = await api.get(`${API_BASE_URL}/orders?status=${status}`);
-
-            console.log('response', response);
             return response.data;
         } catch (error) {
             throw new Error('Failed to fetch orders');
