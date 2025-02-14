@@ -14,7 +14,7 @@ import ReportSummary from './components/ReportSummary';
 import ReportTable from './components/ReportTable';
 import ReportCharts from './components/ReportCharts';
 import ReportFilters from './components/ReportFilters';
-import OrderService from '../../../services/WcutBagMakingService';
+import OrderService from '../../../services/wcutBagMakingService';
 
 export default function WcutBagMakingReportsPage({ type }) {
   const navigate = useNavigate();
