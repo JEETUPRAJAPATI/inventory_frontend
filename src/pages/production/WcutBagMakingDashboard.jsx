@@ -3,7 +3,7 @@ import { Box, Card, Button, Typography, Grid, Divider } from '@mui/material';
 import { Dashboard, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../contexts/ColorModeContext';
-import OrderService from '../../../src/services/WcutBagMakingService.js';
+import OrderService from '../../../src/services/wcutBagMakingService.js';
 import WcutBagMakingOrderList from './components/WcutBagMakingOrderList';
 
 export default function WcutBagMakingDashboard({ type }) {
