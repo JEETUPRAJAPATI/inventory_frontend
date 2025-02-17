@@ -15,22 +15,39 @@ import {
   DialogActions,
   TextField,
   Grid,
+  Modal,
   Box,
   IconButton,
   Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { Add, Edit, Visibility } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import PackageService from '../../services/packageService';
 import { PictureAsPdf } from '@mui/icons-material';
+
+import COMPANY_LOGO from '../../assets/logo.jpg';
 import { jsPDF } from 'jspdf';
+import JsBarcode from "jsbarcode";
 const initialPackageState = {
   length: '',
   width: '',
   height: '',
   weight: ''
 };
-
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+};
 export default function PackagingManagement() {
   const [orders, setOrders] = useState([]); // Dynamic data from API
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -41,20 +58,50 @@ export default function PackagingManagement() {
   const [packages, setPackages] = useState([]);
   const [newPackage, setNewPackage] = useState(initialPackageState); // For editing package
   const [OrderPackageOpen, setOrderPackageOpen] = useState(false);
-  // Fetch orders from the service
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const orders = await PackageService.fetchOrders();
-        setOrders(orders.data);
-      } catch (error) {
-        toast.error('Failed to fetch orders.');
-        console.error('Error fetching orders:', error);
-      }
-    };
+  const [statusToUpdate, setStatusToUpdate] = useState('');
+  const [deliveryToUpdate, setDeliveryToUpdate] = useState(null); // Added to manage the delivery being updated
+  const [updateStatusModalOpen, setUpdateStatusModalOpen] = useState(false);
 
-    fetchOrders();
+  // Fetch orders from the service
+  const fetchOrders = async () => {
+    try {
+      const orders = await PackageService.fetchOrders();
+      console.log('orders', orders.data);
+      setOrders(orders.data);
+    } catch (error) {
+      toast.error('Failed to fetch orders.');
+      console.error('Error fetching orders:', error);
+    }
+  };
+  useEffect(() => {
+    fetchOrders(); // Fetch orders on mount
   }, []);
+
+  const handleStatusUpdateClick = (delivery) => {
+    setDeliveryToUpdate(delivery); // Set the delivery to be updated
+    setStatusToUpdate(delivery.status); // Set the current status to preselect the right option
+    setUpdateStatusModalOpen(true); // Open the modal
+  };
+
+  // Handle updating the delivery status
+  const handleStatusUpdate = async () => {
+    if (!deliveryToUpdate) return; // Prevent update if no delivery is selected
+
+    // Log the data before making the API call
+    console.log("Updating delivery with ID:", deliveryToUpdate._id);
+    console.log("New status:", statusToUpdate);
+
+    try {
+      // Make the API call
+      await PackageService.updateDeliveryStatus(deliveryToUpdate._id, statusToUpdate);
+      toast.success(`Package status updated to ${statusToUpdate}`);
+      fetchOrders(); // Refresh the list after the update
+      setUpdateStatusModalOpen(false); // Close the modal after successful update
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || "An error occurred");
+    }
+  };
+
 
   // Handle order selection
   const handleOrderChange = (e) => {
@@ -131,13 +178,14 @@ export default function PackagingManagement() {
     setPackageListOpen(true);
 
     try {
-      const fetchedPackages = await PackageService.fetchPackagesByOrderId(order.orderId);
-      console.log('Fetched order list', fetchedPackages);
-      setPackages(fetchedPackages);
+      const { packages } = await PackageService.fetchPackagesByOrderId(order.orderId); // Deconstruct to get packages
+      console.log('Fetched order packages:', packages);
+      setPackages(packages);  // Set only the package data
     } catch (error) {
       console.error('Error fetching packages:', error);
     }
   };
+
 
   const handleEditPackage = (pkg) => {
     setSelectedPackage(pkg);
@@ -226,55 +274,117 @@ export default function PackagingManagement() {
   const handleOpenDialog = () => {
     setOrderPackageOpen(true);
   };
-  const generatePackageLabel = (pkg) => {
 
+
+
+
+
+  const generatePackageLabel = (pkg, salesOrder) => {
     console.log('pkg', pkg);
-    // Ensure the 'pkg' object contains necessary data
-    if (!pkg) {
-      toast.error('Invalid package data');
+    console.log('sales order', salesOrder);
+
+    if (!pkg || !salesOrder) {
+      toast.error('Invalid package or sales order data');
       return;
     }
 
     const doc = new jsPDF();
+    const marginLeft = 20;
+    const topMargin = 10;
+    const startY = topMargin + 30;
+    const lineHeight = 12;
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Add company header
-    doc.setFontSize(16);
-    doc.text('MFRS. OF TECHNICAL TEXTILE FABRIC', 105, 20, { align: 'center' });
+    // Load company logo as Base64
+    const loadImageAsBase64 = (url, callback) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        callback(canvas.toDataURL("image/png"));
+      };
+      img.onerror = function () {
+        console.error("Error loading image:", url);
+        callback(null);
+      };
+      img.src = url;
+    };
 
-    // Add package details in a grid format
-    doc.setFontSize(12);
-    const startY = 40;
-    const lineHeight = 10;
+    // Generate Barcode
+    const generateBarcode = (text, callback) => {
+      const canvas = document.createElement("canvas");
+      JsBarcode(canvas, text, {
+        format: "CODE128",
+        displayValue: false,
+        width: 2,
+        height: 40, // Increased height for better visibility
+      });
+      callback(canvas.toDataURL("image/png"));
+    };
 
-    // Left column
-    doc.text(`ROLL No.    : ${pkg.rollNo || 'N/A'}`, 20, startY);
-    doc.text(`COLOR       : ${pkg.color || 'N/A'}`, 20, startY + lineHeight);
-    doc.text(`UNIT No.    : 1`, 20, startY + lineHeight * 2);
-    doc.text(`CUST. Code  : SW350`, 20, startY + lineHeight * 3);
-    doc.text(`Rolls In bundle : 1`, 20, startY + lineHeight * 4);
-    doc.text(`Lot No      : 2415N9U1`, 20, startY + lineHeight * 5);
+    loadImageAsBase64(COMPANY_LOGO, (logoBase64) => {
+      generateBarcode(pkg.rollNo || "000000", (barcodeBase64) => {
+        let currentY = topMargin;
 
-    // Right column
-    doc.text(`GSM         : ${pkg.gsm || 'N/A'}`, 120, startY);
-    doc.text(`WIDTH       : ${pkg.width || 'N/A'}`, 120, startY + lineHeight);
-    doc.text(`LENGTH      : ${pkg.length || 'N/A'}`, 120, startY + lineHeight * 2);
-    doc.text(`GROSS WT.   : ${pkg.grossWeight || 'N/A'}`, 120, startY + lineHeight * 3);
-    doc.text(`NET WT.     : ${pkg.netWeight || 'N/A'}`, 120, startY + lineHeight * 4);
+        // Add company logo and details
+        if (logoBase64) {
+          doc.addImage(logoBase64, "PNG", marginLeft, currentY, 50, 25);
+        }
+        // Company info
+        doc.setFontSize(12);
+        doc.text("Company Name", pageWidth - 90, currentY + 5);
+        doc.text("Address: 123 Business Street, City", pageWidth - 90, currentY + 15);
+        doc.text("GSM Email: info@company.com", pageWidth - 90, currentY + 25);
+        doc.text("Phone: +1-234-567-890", pageWidth - 90, currentY + 35);
 
-    // Additional details
-    const startY2 = startY + lineHeight * 6;
-    doc.text(`PATTERN     : ${pkg.pattern || 'N/A'}`, 20, startY2);
-    doc.text(`TYPE OF FABRIC : ${pkg.fabricType || 'N/A'}`, 20, startY2 + lineHeight);
-    doc.text(`TREATMENT   : ${pkg.treatment || 'N/A'}`, 20, startY2 + lineHeight * 2);
-    doc.text(`TECHNOLOGY  : ${pkg.technology || 'N/A'}`, 20, startY2 + lineHeight * 3);
+        // Add separator line
+        currentY += 45;
+        doc.line(marginLeft, currentY, pageWidth - marginLeft, currentY);
+        currentY += 10;
 
-    // Add barcode (simulated with a black rectangle)
-    doc.setFillColor(0, 0, 0);
-    doc.rect(20, startY2 + lineHeight * 4, 80, 20, 'F');
+        // Add sales order details
+        doc.text(`Order ID    : ${salesOrder.orderId || 'N/A'}`, marginLeft, currentY);
+        doc.text(`Customer   : ${salesOrder.customerName || 'N/A'}`, marginLeft, currentY + lineHeight);
+        doc.text(`Email      : ${salesOrder.email || 'N/A'}`, marginLeft, currentY + lineHeight * 2);
+        doc.text(`Mobile     : ${salesOrder.mobileNumber || 'N/A'}`, marginLeft, currentY + lineHeight * 3);
+        doc.text(`Address    : ${salesOrder.address || 'N/A'}`, marginLeft, currentY + lineHeight * 4);
+        doc.text(`Job Name   : ${salesOrder.jobName || 'N/A'}`, marginLeft, currentY + lineHeight * 5);
 
-    // Save the PDF with dynamic filename
-    doc.save(`package-label-${pkg.gsm}.pdf`);
-    toast.success('Package label downloaded successfully');
+        currentY += lineHeight * 6;
+        doc.text(`Order Price: ${salesOrder.orderPrice || 'N/A'}`, marginLeft, currentY);
+
+        // Add package details in a structured format
+        currentY += 20;
+        // doc.text(`ROLL No.    : ${pkg.rollNo || 'N/A'}`, marginLeft, currentY);
+        doc.text(`TYPE OF FABRIC : ${salesOrder.bagDetails.type || 'N/A'}`, marginLeft, currentY);
+        doc.text(`COLOR       : ${salesOrder.bagDetails.color || 'N/A'}`, marginLeft, currentY + lineHeight);
+        doc.text(`UNIT No.    : 1`, marginLeft, currentY + lineHeight * 2);
+        doc.text(`CUST. Code  : SW350`, marginLeft, currentY + lineHeight * 3);
+        doc.text(`Rolls In bundle : 1`, marginLeft, currentY + lineHeight * 4);
+
+        doc.text(`GSM         : ${salesOrder.bagDetails.gsm || 'N/A'}`, pageWidth / 2, currentY);
+        doc.text(`WIDTH       : ${pkg.width || 'N/A'}`, pageWidth / 2, currentY + lineHeight);
+        doc.text(`LENGTH      : ${pkg.length || 'N/A'}`, pageWidth / 2, currentY + lineHeight * 2);
+        doc.text(`GROSS WT.   : ${pkg.grossWeight || 'N/A'}`, pageWidth / 2, currentY + lineHeight * 3);
+        doc.text(`NET WT.     : ${pkg.netWeight || 'N/A'}`, pageWidth / 2, currentY + lineHeight * 4);
+
+        currentY += lineHeight * 6;
+
+        // Add barcode
+        currentY += 20;
+        if (barcodeBase64) {
+          doc.addImage(barcodeBase64, "PNG", marginLeft, currentY, 100, 30);
+        }
+
+        // Save the PDF
+        doc.save(`package-label-${pkg.gsm}.pdf`);
+        toast.success('Package label downloaded successfully');
+      });
+    });
   };
 
 
@@ -308,11 +418,15 @@ export default function PackagingManagement() {
               </TableHead>
               <TableBody>
                 {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>{order?.orderId || 'N/A'}</TableCell>
-                    <TableCell>{order?.customerName || 'N/A'}</TableCell>
-                    <TableCell>{order?.totalDimensions || 'N/A'}</TableCell>
-                    <TableCell>{order?.totalWeight || 'N/A'}</TableCell>
+                  <TableRow key={order._id}>
+                    <TableCell>{order?.order_id || 'N/A'}</TableCell>
+                    <TableCell>{order?.order?.customerName || 'N/A'}</TableCell>
+                    <TableCell>
+                      {order?.order?.bagDetails?.size || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      {order?.order?.quantity || 'N/A'}
+                    </TableCell>
                     <TableCell>
                       <Chip
                         label={order.status.toUpperCase()}
@@ -321,18 +435,24 @@ export default function PackagingManagement() {
                       />
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="small"
-                        variant="outlined"
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleStatusUpdateClick(order)}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        color="secondary"
                         onClick={() => handleViewPackages(order)}
                       >
-                        View Packages
-                      </Button>
+                        <Visibility />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+
           </TableContainer>
         </Box>
       </Card>
@@ -385,7 +505,7 @@ export default function PackagingManagement() {
                         </IconButton>
                         <IconButton
                           color="primary"
-                          onClick={() => generatePackageLabel(pkg)}
+                          onClick={() => generatePackageLabel(pkg, selectedOrder)}
                         >
                           <PictureAsPdf />
                         </IconButton>
@@ -405,6 +525,40 @@ export default function PackagingManagement() {
           <Button onClick={() => setPackageListOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+
+      {/* Update Status Modal */}
+      <Modal
+        open={updateStatusModalOpen}
+        onClose={() => setUpdateStatusModalOpen(false)} // Close modal on backdrop click
+      >
+        <Box sx={modalStyle}>
+          <Typography variant="h6" gutterBottom>
+            Update Delivery Status
+          </Typography>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusToUpdate}
+              onChange={(e) => setStatusToUpdate(e.target.value)} // Handle selection change
+              label="Status"
+            >
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="delivered">Delivered</MenuItem>
+              <MenuItem value="cancelled">Cancelled</MenuItem>
+            </Select>
+          </FormControl>
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button onClick={() => setUpdateStatusModalOpen(false)} sx={{ mr: 1 }}>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleStatusUpdate}>
+              Update
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
 
       {/* Add Package Dimensions Dialog */}
       <Dialog open={OrderPackageOpen} onClose={handleCloseDialog}>

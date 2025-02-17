@@ -118,13 +118,15 @@ const InvoiceManagement = () => {
       setLoading(false);
     }
   };
+
+  // Get status color for the chip
   const getStatusColor = (status) => {
     const colors = {
-      Paid: 'success',       // Green for Paid
-      Pending: 'warning',    // Yellow for Pending
-      Cancelled: 'error',    // Red for Cancelled
+      Paid: 'success',
+      Pending: 'warning',
+      Cancelled: 'error',
     };
-    return colors[status.toLowerCase()] || 'default'; // Default color if status doesn't match
+    return colors[status.toLowerCase()] || 'default';
   };
 
   return (
@@ -140,7 +142,7 @@ const InvoiceManagement = () => {
                 <TableCell>Invoice ID</TableCell>
                 <TableCell>Order ID</TableCell>
                 <TableCell>Customer</TableCell>
-                <TableCell>Amount</TableCell>
+                <TableCell>Order Price</TableCell>
                 <TableCell>Date</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
@@ -148,11 +150,11 @@ const InvoiceManagement = () => {
             </TableHead>
             <TableBody>
               {invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>{invoice.order_id}</TableCell>
+                <TableRow key={invoice._id}>
                   <TableCell>{invoice.invoice_id}</TableCell>
-                  <TableCell>{invoice.customer}</TableCell>
-                  <TableCell>₹{invoice.amount}</TableCell>
+                  <TableCell>{invoice.order_id}</TableCell>
+                  <TableCell>{invoice.orderDetails?.customerName || 'N/A'}</TableCell>
+                  <TableCell>₹{invoice.orderDetails?.orderPrice || '0'}</TableCell>
                   <TableCell>
                     {invoice.date ? (
                       new Intl.DateTimeFormat('en-GB', {

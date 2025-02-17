@@ -11,11 +11,13 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, Visibility } from '@mui/icons-material';
+
 import FinishedProductForm from '../../components/inventory/forms/FinishedProductForm';
 import DeleteConfirmDialog from '../../components/common/DeleteConfirmDialog';
 import toast from 'react-hot-toast';
 import productService from '../../services/productService';
+import FinishedProductModel from './FinishedProductModel';
 
 export default function FinishedProducts() {
   const [products, setProducts] = useState([]);  // Holds the list of products
@@ -25,12 +27,13 @@ export default function FinishedProducts() {
   const [productToDelete, setProductToDelete] = useState(null);
   const [loading, setLoading] = useState(true);  // To track loading state
 
+  const [selectedFinishedProduct, setSelectedFinishedProduct] = useState(null);
+
   // Fetch the list of products when the component mounts
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await productService.getProducts();
-        console.log('response', response.data)
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -54,7 +57,6 @@ export default function FinishedProducts() {
   };
 
   const handleFormSubmit = async (formData) => {
-    console.log('form data', selectedProduct);
     try {
       if (selectedProduct) {
         // Update product
@@ -68,9 +70,7 @@ export default function FinishedProducts() {
       setFormOpen(false);
       // Re-fetch products after update or add
       const response = await productService.getProducts();
-      if (response) {
-        setProducts(response.data);
-      }
+      setProducts(response.data);
     } catch (error) {
       toast.error('Failed to save product');
     }
@@ -78,23 +78,32 @@ export default function FinishedProducts() {
 
   const handleDeleteConfirm = async () => {
     try {
-      await productService.deleteProduct(productToDelete._id);  // Call API to delete product
+      await productService.deleteProduct(productToDelete._id);
       toast.success('Product deleted successfully');
       setDeleteDialogOpen(false);
       // Re-fetch products after deletion
       const response = await productService.getProducts();
-      if (response) {
-        setProducts(response.data);
-      }
+      setProducts(response.data);
     } catch (error) {
       toast.error('Failed to delete product');
     }
   };
+  const handleView = async (id) => {
+    try {
+      const productDetails = await productService.getFullDetailById(id);
+      console.log('productDetails', productDetails);
+      setSelectedFinishedProduct(productDetails);  // Set the product data for the modal
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
 
   const getStatusColor = (status) => {
     const colors = {
-      available: 'success',
-      low_stock: 'warning',
+      delivered: 'success',
+      pending: 'warning',
+      completed: 'primary',
       out_of_stock: 'error',
     };
     return colors[status] || 'default';
@@ -114,28 +123,24 @@ export default function FinishedProducts() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Category</TableCell>
+                <TableCell>Order ID</TableCell>
+                <TableCell>Customer Name</TableCell>
                 <TableCell>Quantity</TableCell>
-                <TableCell>Size</TableCell>
-                <TableCell>Color</TableCell>
-                <TableCell>Price</TableCell>
+                <TableCell>Order Price</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.category.replace('_', ' ')}</TableCell>
-                  <TableCell>{product.quantity}</TableCell>
-                  <TableCell>{product.size}</TableCell>
-                  <TableCell>{product.color}</TableCell>
-                  <TableCell>₹{product.price}</TableCell>
+                <TableRow key={product._id}>
+                  <TableCell>{product.order_id || 'N/A'}</TableCell>
+                  <TableCell>{product.orderDetails?.customerName || 'N/A'}</TableCell>
+                  <TableCell>{product.orderDetails?.quantity || 'N/A'}</TableCell>
+                  <TableCell>₹{product.orderDetails?.orderPrice || 'N/A'}</TableCell>
                   <TableCell>
                     <Chip
-                      label={product.status.replace('_', ' ').toUpperCase()}
+                      label={product.status}
                       color={getStatusColor(product.status)}
                       size="small"
                     />
@@ -155,6 +160,13 @@ export default function FinishedProducts() {
                     >
                       <Delete />
                     </IconButton>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => handleView(product._id)}  // Open view modal
+                    >
+                      <Visibility />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -169,6 +181,14 @@ export default function FinishedProducts() {
         onSubmit={handleFormSubmit}
         product={selectedProduct}
       />
+
+      {/* Finished Product Model */}
+      <FinishedProductModel
+        open={!!selectedFinishedProduct}  // Only show if product is selected
+        production={selectedFinishedProduct}  // Pass the product data
+        onClose={() => setSelectedFinishedProduct(null)}  // Close the modal
+      />
+
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}

@@ -48,6 +48,15 @@ const updateProduct = async (productId, productData) => {
     }
 };
 
+const getFullDetailById = async (id) => {
+    try {
+        const response = await api.get(`${API_URL}/full-detail/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch delivery details');
+    }
+};
+
 // Function to delete a product
 const deleteProduct = async (productId) => {
     try {
@@ -63,5 +72,6 @@ export default {
     getProductById,
     addProduct,
     updateProduct,
+    getFullDetailById,
     deleteProduct,
 };

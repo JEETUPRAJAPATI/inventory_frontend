@@ -38,7 +38,9 @@ import axios from "axios";
 import { API_BASE_URL } from "../../config/constants";
 import authService from "../../services/authService";
 import QRCodeDialog from "../../components/sales/orders/QRCodeDialog";
-
+import { QRCodeCanvas } from "qrcode.react";
+import QRCode from "qrcode";
+import COMPANY_LOGO from '../../assets/logo.jpg';
 const categoryOptions = [
   { value: "fabric", label: "Fabric" },
   { value: "handle", label: "Handle" },
@@ -167,6 +169,30 @@ export default function RawMaterials() {
     }
   };
 
+  const handleDeleteSubCategory = async (subCategory) => {
+    try {
+      const token = authService.getToken();
+      if (!token) {
+        throw new Error("Unauthorized: No token provided");
+      }
+
+      // Send DELETE request to backend
+      await axios.delete(
+        `${API_BASE_URL}/inventory/raw-material/sub-category/${subCategory?._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      toast.success("Sub Category deleted successfully");
+      fetchSubCategories();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
+  }
+
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -176,58 +202,163 @@ export default function RawMaterials() {
     setViewSubcategoriesOpen(true);
   };
 
-  // Download category pdf file
-  const handleDownloadData = (category) => {
-    const doc = new jsPDF();
+  // Download category PDF file
+  const handleDownloadData = async (category) => {
+    try {
+      // Fetch subcategories from API
+      const response = await axios.get(
+        `${API_BASE_URL}/inventory/raw-material/sub-category/${category._id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authService.getToken()}`,
+          },
+        }
+      );
 
-    // Add title
-    doc.setFontSize(16);
-    doc.text(
-      `${
-        categoryOptions.find((opt) => opt.value === category.category_name)
-          ?.label
-      } Details`,
-      14,
-      15
-    );
+      const subcategories = response.data.data || [];
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const marginLeft = 14;
+      let currentY = 10; // Track current Y position
 
-    // Add category details
-    doc.setFontSize(12);
-    doc.text(`Category Details:`, 14, 25);
-    doc.text(`Fabric Color: ${category.fabric_color}`, 14, 35);
-    doc.text(`Roll Size: ${category.roll_size}`, 14, 45);
-    doc.text(`GSM: ${category.gsm}`, 14, 55);
-    doc.text(`Fabric Quality: ${category.fabric_quality}`, 14, 65);
-    doc.text(`Quantity: ${category.quantity_kgs} kg`, 14, 75);
+      // **Company Header Section**
+      doc.addImage(COMPANY_LOGO, "PNG", marginLeft, currentY, 40, 20);
+      doc.setFontSize(12);
+      doc.text("Company Name", pageWidth - 80, currentY + 5);
+      doc.text("Address: 123 Business Street, City", pageWidth - 80, currentY + 12);
+      doc.text("Email: info@company.com", pageWidth - 80, currentY + 19);
+      doc.text("Phone: +1-234-567-890", pageWidth - 80, currentY + 26);
+      doc.line(marginLeft, currentY + 30, pageWidth - marginLeft, currentY + 30);
+      currentY += 40; // Move down
 
-    // Add subcategories table
-    if (category.subcategories?.length > 0) {
-      doc.text("Subcategories:", 14, 90);
+      // **Category Title**
+      doc.setFontSize(14);
+      doc.text(`${category.category_name} Details`, marginLeft, currentY);
+      currentY += 8;
 
-      const tableColumn = [
-        "Fabric Color",
-        "Roll Size",
-        "GSM",
-        "Fabric Quality",
-        "Quantity (kg)",
+      // **Category Fabric Details (Table-like Layout)**
+      doc.setFontSize(11);
+      const details = [
+        ["Fabric Color", category.fabric_color],
+        ["Roll Size", category.roll_size],
+        ["GSM", category.gsm],
+        ["Fabric Quality", category.fabric_quality],
+        ["Quantity", `${category.quantity_kgs} kg`],
       ];
-      const tableRows = category.subcategories.map((sub) => [
-        sub.fabricColor,
-        sub.rollSize,
-        sub.gsm,
-        sub.fabricQuality,
-        sub.quantity,
-      ]);
 
       doc.autoTable({
-        startY: 95,
-        head: [tableColumn],
-        body: tableRows,
+        startY: currentY,
+        head: [["Property", "Details"]],
+        body: details,
+        theme: "grid",
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
+        columnStyles: {
+          0: { cellWidth: 50, fontStyle: "bold" },
+          1: { cellWidth: 100 },
+        },
       });
-    }
 
-    doc.save(`${category.category_name}-details.pdf`);
-    toast.success("Data downloaded successfully");
+      currentY = doc.autoTable.previous.finalY + 10; // Move below fabric details
+
+      // **Subcategories Table**
+      if (subcategories.length > 0) {
+        doc.setFontSize(12);
+        doc.text("Subcategories:", marginLeft, currentY);
+        currentY += 5;
+
+        const tableColumn = [
+          "Fabric Color",
+          "Roll Size",
+          "GSM",
+          "Fabric Quality",
+          "Quantity (kg)",
+          "QR Code",
+        ];
+        let tableRows = [];
+
+        // **Generate QR Codes Only for Existing Subcategories**
+        const qrCodes = await Promise.all(
+          subcategories.map(async (sub) => {
+            const qrData = JSON.stringify({
+              fabricColor: sub.fabricColor,
+              rollSize: sub.rollSize,
+              gsm: sub.gsm,
+              fabricQuality: sub.fabricQuality,
+              quantity: sub.quantity,
+            });
+            return await QRCode.toDataURL(qrData);
+          })
+        );
+
+        // **Ensure Exact Number of Rows**
+        subcategories.forEach((sub) => {
+          tableRows.push([
+            sub.fabricColor,
+            sub.rollSize,
+            sub.gsm,
+            sub.fabricQuality,
+            sub.quantity,
+            "", // Placeholder for QR code
+          ]);
+        });
+
+        doc.autoTable({
+          startY: currentY,
+          head: [tableColumn],
+          body: tableRows,
+          theme: "grid",
+          headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            fontSize: 11,
+            fontStyle: "bold",
+          },
+          bodyStyles: { fontSize: 10, cellPadding: 8 },
+          columnStyles: {
+            0: { cellWidth: 30 },
+            1: { cellWidth: 30 },
+            2: { cellWidth: 25 },
+            3: { cellWidth: 40 },
+            4: { cellWidth: 30 },
+            5: { cellWidth: 40 },
+          },
+          didDrawCell: (data) => {
+            if (data.column.index === 5 && data.row.section === "body") {
+              const qrSize = 18;
+              const xPos = data.cell.x + (data.cell.width - qrSize) / 2;
+              const yPos = data.cell.y + (data.cell.height - qrSize) / 2;
+
+              const subcategoryIndex = data.row.index;
+              if (subcategoryIndex < qrCodes.length) {
+                doc.addImage(qrCodes[subcategoryIndex], "PNG", xPos, yPos, qrSize, qrSize);
+              }
+            }
+          },
+        });
+
+        currentY = doc.autoTable.previous.finalY + 10;
+      }
+
+      // **Footer Section**
+      // **Footer Section**
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}  Page ${i} of ${pageCount}`, pageWidth - 80, pageHeight - 10);
+      }
+      // **Save the PDF**
+      doc.save(`${category.category_name}-details.pdf`);
+      toast.success("Data downloaded successfully");
+    } catch (error) {
+      console.error("Error fetching subcategories or generating PDF:", error);
+      toast.error("Failed to download data. Please try again.");
+    }
   };
 
   // add sub category
@@ -485,6 +616,8 @@ export default function RawMaterials() {
                 <TableCell>Fabric Quality</TableCell>
                 <TableCell>Quantity (kg)</TableCell>
                 <TableCell>QR Code</TableCell>
+                <TableCell>Action</TableCell>
+
               </TableRow>
             </TableHead>
             <TableBody>
@@ -502,6 +635,16 @@ export default function RawMaterials() {
                       onClick={() => handleShowQR(subcategory)}
                     >
                       <QrCode />
+                    </IconButton>
+
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteSubCategory(subcategory)}
+                    >
+                      <Delete />
                     </IconButton>
                   </TableCell>
                 </TableRow>

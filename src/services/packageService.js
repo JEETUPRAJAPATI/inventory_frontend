@@ -22,10 +22,23 @@ export const fetchOrders = async () => {
 export const fetchPackagesByOrderId = async (orderId) => {
     try {
         const response = await api.get(`${ORDER_API_URL}/${orderId}`);
-        return response.data.data; // assuming the API returns the packages in the `data` field
+        if (response.data.success) {
+            console.log('response', response.data);
+            return response.data;
+        } else {
+            throw new Error('Failed to fetch packages: Success flag is false');
+        }
     } catch (error) {
         console.error('Error fetching packages:', error);
         throw error;
+    }
+}
+export const updateDeliveryStatus = async (id, status) => {
+    try {
+        const response = await api.put(`${PACKAGE_API_URL}/status/${id}`, { status });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to update delivery status');
     }
 }
 /**
@@ -84,6 +97,7 @@ export default {
     fetchOrders,
     fetchPackagesByOrderId,
     updatePackage,
+    updateDeliveryStatus,
     addPackage,
     createPackage,
     deletePackage,

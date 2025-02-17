@@ -66,12 +66,12 @@ export default function InvoiceList() {
           Invoice Details
         </Typography>
         <Divider sx={{ my: 1 }} />
-        
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
           <Typography variant="body2" color="text.secondary">Invoice ID:</Typography>
           <Typography variant="body2">{invoice.id}</Typography>
         </Box>
-        
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
           <Typography variant="body2" color="text.secondary">Order ID:</Typography>
           <Typography variant="body2">{invoice.orderId}</Typography>

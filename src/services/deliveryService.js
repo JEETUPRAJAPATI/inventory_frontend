@@ -24,6 +24,7 @@ const deliveryService = {
     const response = await api.put(`inventory/delivery/${id}`, updatedDetails);
     return response.data;
   },
+
   // Update delivery status
   updateDeliveryStatus: async (id, status) => {
     try {

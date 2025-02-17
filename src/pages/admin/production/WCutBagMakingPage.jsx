@@ -97,21 +97,30 @@ export default function WCutBagMakingPage() {
             startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />,
           }}
         />
+
         <TextField
-          fullWidth
           select
-          label="Status"
-          name="status"
           size="small"
-          sx={{ minWidth: 120 }}
+          name="status"
           value={filters.status}
           onChange={handleFilterChange}
-          SelectProps={{ native: true }}
+          sx={{ minWidth: 120 }}
+          SelectProps={{
+            displayEmpty: true,
+            renderValue: (selected) => {
+              if (selected === '') {
+                return <em>All Statuses</em>;
+              }
+              return selected;
+            },
+          }}
         >
-          <option value="">All</option>
-          <option value="pending">Pending</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
+          <MenuItem value="">
+            <em>All Statuses</em>
+          </MenuItem>
+          <MenuItem value="pending">Pending</MenuItem>
+          <MenuItem value="in_progress">In Progress</MenuItem>
+          <MenuItem value="completed">Completed</MenuItem>
         </TextField>
 
         <Button variant="outlined" onClick={handleReset}>
